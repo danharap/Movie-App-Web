@@ -7,6 +7,7 @@ import WatchHistoryPage from './components/WatchHistoryPage';
 import SuggestionsPage from './components/SuggestionsPage';
 import FriendsPage from './components/FriendsPage';
 import ProfilePage from './components/ProfilePage';
+import AnimationTestPage from './components/AnimationTestPage';
 
 const App = () => {
   const [currentPage, setCurrentPage] = useState('login');
@@ -164,6 +165,16 @@ const App = () => {
     }
   };
 
+  // Check for test mode in URL parameters
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const testMode = urlParams.get('test');
+    
+    if (testMode === 'animations' && isAuthenticated) {
+      setCurrentPage('animation');
+    }
+  }, [isAuthenticated]);
+
   // Render authentication page if not logged in
   if (!isAuthenticated) {
     return (
@@ -186,13 +197,13 @@ const App = () => {
           user={user}
         />
         
-        <main>
-          {currentPage === 'home' && (
+        <main>          {currentPage === 'home' && (
             <HomePage 
               user={user}
               setCurrentPage={setCurrentPage}
               watchHistory={watchHistory}
               savedMovies={savedMovies}
+              addToWatchHistory={addToWatchHistory}
             />
           )}
           
@@ -226,6 +237,9 @@ const App = () => {
               watchHistory={watchHistory}
               savedMovies={savedMovies}
             />
+          )}
+          {currentPage === 'animation' && (
+            <AnimationTestPage />
           )}
         </main>
       </div>
