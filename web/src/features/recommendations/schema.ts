@@ -1,9 +1,12 @@
 import { z } from "zod";
 
 export const recommendationInputSchema = z.object({
-  mood: z.string().min(1, "Pick how you’re feeling"),
+  /** One or more vibe chips; each maps to TMDb genre buckets (unless genres lock). */
+  vibes: z
+    .array(z.string().trim().min(1))
+    .min(1, "Pick at least one vibe")
+    .max(8),
   genres: z.array(z.number().int()).optional().default([]),
-  tone: z.array(z.string()).optional().default([]),
   runtimeMin: z.number().int().min(0).optional(),
   runtimeMax: z.number().int().min(0).optional(),
   minVoteAverage: z.number().min(0).max(10).optional().default(6),

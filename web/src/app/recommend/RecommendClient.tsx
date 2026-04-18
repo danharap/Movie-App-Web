@@ -7,32 +7,25 @@ import type { RecommendedMovie } from "@/types/movie";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-const MOOD_PRESETS = [
-  "comforting",
-  "intense",
-  "emotional",
-  "funny",
-  "dark",
-  "mind bending",
-  "adventurous",
-  "nostalgic",
-];
-
-const TONE_CHIPS = [
-  "funny",
-  "dark",
-  "intense",
-  "comforting",
-  "emotional",
-  "weird",
-  "romantic",
-  "epic",
+/** Canonical value sent to the API (normalized in engine via normalizeMoodKey). */
+const VIBE_OPTIONS: { value: string; label: string }[] = [
+  { value: "comforting", label: "Comforting" },
+  { value: "cozy", label: "Cozy" },
+  { value: "funny", label: "Funny" },
+  { value: "romantic", label: "Romantic" },
+  { value: "emotional", label: "Emotional" },
+  { value: "intense", label: "Intense" },
+  { value: "dark", label: "Dark" },
+  { value: "weird", label: "Weird" },
+  { value: "mind bending", label: "Mind-bending" },
+  { value: "adventurous", label: "Adventurous" },
+  { value: "epic", label: "Epic" },
+  { value: "nostalgic", label: "Nostalgic" },
 ];
 
 export function RecommendClient() {
   const router = useRouter();
-  const [mood, setMood] = useState("comforting");
-  const [tone, setTone] = useState<string[]>([]);
+  const [vibes, setVibes] = useState<string[]>(["comforting"]);
   const [genres, setGenres] = useState<number[]>([]);
   const [runtimeMin, setRuntimeMin] = useState("");
   const [runtimeMax, setRuntimeMax] = useState("");
@@ -47,10 +40,15 @@ export function RecommendClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function toggleTone(t: string) {
-    setTone((prev) =>
-      prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t],
-    );
+  function toggleVibe(value: string) {
+    setVibes((prev) => {
+      if (prev.includes(value)) {
+        if (prev.length <= 1) return prev;
+        return prev.filter((x) => x !== value);
+      }
+      if (prev.length >= 8) return prev;
+      return [...prev, value];
+    });
   }
 
   function toggleGenre(id: number) {
@@ -64,8 +62,7 @@ export function RecommendClient() {
     setLoading(true);
     setError(null);
     const body: RecommendationInput = {
-      mood,
-      tone,
+      vibes,
       genres,
       surpriseMe,
       hiddenGem,
@@ -126,40 +123,24 @@ export function RecommendClient() {
       </header>
 
       <section className="reveal space-y-3" style={{ animationDelay: "0.05s" }}>
-        <label className="text-sm font-medium text-zinc-300" htmlFor="mood">
-          Mood
-        </label>
-        <input
-          id="mood"
-          name="mood"
-          list="mood-presets"
-          value={mood}
-          onChange={(e) => setMood(e.target.value)}
-          className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none ring-amber-200/30 placeholder:text-zinc-600 focus:ring-2"
-          placeholder="e.g. comforting, intense…"
-        />
-        <datalist id="mood-presets">
-          {MOOD_PRESETS.map((m) => (
-            <option key={m} value={m} />
-          ))}
-        </datalist>
-      </section>
-
-      <section className="reveal space-y-3" style={{ animationDelay: "0.1s" }}>
-        <p className="text-sm font-medium text-zinc-300">Tone (optional)</p>
+        <p className="text-sm font-medium text-zinc-300">Vibe</p>
+        <p className="text-xs leading-relaxed text-zinc-500">
+          Tap one or more — we map each to TMDb genres (unless you lock genres below).
+          Keep at least one selected.
+        </p>
         <div className="flex flex-wrap gap-2">
-          {TONE_CHIPS.map((t) => (
+          {VIBE_OPTIONS.map(({ value, label }) => (
             <button
-              key={t}
+              key={value}
               type="button"
-              onClick={() => toggleTone(t)}
+              onClick={() => toggleVibe(value)}
               className={`rounded-full border px-3 py-1.5 text-sm transition ${
-                tone.includes(t)
+                vibes.includes(value)
                   ? "border-amber-200/50 bg-amber-200/15 text-amber-50"
                   : "border-white/10 text-zinc-400 hover:border-white/20 hover:text-zinc-200"
               }`}
             >
-              {t}
+              {label}
             </button>
           ))}
         </div>
@@ -169,7 +150,7 @@ export function RecommendClient() {
         <p className="text-sm font-medium text-zinc-300">Genres (optional)</p>
         <p className="text-xs leading-relaxed text-zinc-500">
           When you pick genres here, they <span className="text-zinc-400">take over</span>{" "}
-          from mood — we only search within those categories and require real TMDb
+          from vibe — we only search within those categories and require real TMDb
           genre tags (so a family comedy won&apos;t appear if you only chose Horror +
           Thriller).
         </p>

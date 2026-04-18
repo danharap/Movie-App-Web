@@ -1,8 +1,4 @@
-import {
-  MOOD_GENRE_IDS,
-  TONE_GENRE_IDS,
-  normalizeMoodKey,
-} from "@/config/moodMappings";
+import { VIBE_GENRE_IDS, normalizeMoodKey } from "@/config/moodMappings";
 import { TMDB_GENRE_BY_ID } from "@/config/tmdbGenres";
 import { discoverMovies, getMovieDetails, type DiscoverResponse } from "@/lib/tmdb/client";
 import type { RecommendedMovie, RecommendationReason } from "@/types/movie";
@@ -59,7 +55,7 @@ function pickedGenreNames(picked: number[]) {
 function buildReasons(
   input: RecommendationInput,
   movieGenreIds: number[],
-  moodGenreSet: Set<number>,
+  vibeGenreSet: Set<number>,
   opts: {
     genreLock: boolean;
     pickedGenres: number[];
@@ -75,11 +71,9 @@ function buildReasons(
       label: `Genres: ${pickedGenreNames(opts.pickedGenres)} (${modeLabel})`,
     });
   } else {
-    reasons.push({ label: `Mood: ${input.mood.trim()}` });
-    for (const t of input.tone) {
-      reasons.push({ label: `Tone: ${t}` });
-    }
-    const overlap = movieGenreIds.filter((id) => moodGenreSet.has(id));
+    const vibeLabel = input.vibes.map((v) => v.trim()).filter(Boolean).join(", ");
+    reasons.push({ label: `Vibes: ${vibeLabel}` });
+    const overlap = movieGenreIds.filter((id) => vibeGenreSet.has(id));
     if (overlap.length) {
       reasons.push({ label: "Genre match for what you asked for" });
     }
@@ -123,21 +117,22 @@ export async function runRecommendationEngine(
   const userPicked = uniq(input.genres ?? []);
   const genreLock = userPicked.length > 0;
 
-  const moodKey = normalizeMoodKey(input.mood);
-  const moodGenres = MOOD_GENRE_IDS[moodKey] ?? MOOD_GENRE_IDS.any;
-  const moodGenreSet = new Set(moodGenres);
+  const vibeKeys = input.vibes.map((v) => normalizeMoodKey(v));
+  const hasNostalgic = vibeKeys.includes("nostalgic");
 
   let genreIdsForDiscover: number[] = [];
+  if (!genreLock) {
+    for (const k of vibeKeys) {
+      genreIdsForDiscover.push(...(VIBE_GENRE_IDS[k] ?? []));
+    }
+    genreIdsForDiscover = uniq(genreIdsForDiscover);
+  }
+
+  const vibeGenreSet = new Set(genreIdsForDiscover);
 
   if (genreLock) {
     genreIdsForDiscover = [...userPicked];
   } else {
-    genreIdsForDiscover = [...moodGenres];
-    for (const t of input.tone) {
-      const tk = normalizeMoodKey(t);
-      genreIdsForDiscover.push(...(TONE_GENRE_IDS[tk] ?? []));
-    }
-    genreIdsForDiscover = uniq(genreIdsForDiscover);
     if (input.surpriseMe && genreIdsForDiscover.length > 0) {
       genreIdsForDiscover = shuffle(genreIdsForDiscover, Math.random).slice(
         0,
@@ -168,7 +163,7 @@ export async function runRecommendationEngine(
   }
   if (input.eraMaxYear != null) {
     params.set("primary_release_date.lte", `${input.eraMaxYear}-12-31`);
-  } else if (moodKey === "nostalgic" && !input.eraMaxYear) {
+  } else if (hasNostalgic && !input.eraMaxYear) {
     params.set("primary_release_date.lte", "1999-12-31");
   }
 
@@ -247,7 +242,7 @@ export async function runRecommendationEngine(
       continue;
     }
 
-    const reasons = buildReasons(input, genreIdsList, moodGenreSet, {
+    const reasons = buildReasons(input, genreIdsList, vibeGenreSet, {
       genreLock,
       pickedGenres: userPicked,
       pickedGenreMode,

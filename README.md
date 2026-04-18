@@ -1,6 +1,6 @@
 # Nudge Film — movie recommendation web app
 
-A production-style app for indecisive viewers: mood- or **genre-strict** preferences, a **short curated shortlist** from TMDb, and a personal **watchlist / watched log** backed by **Supabase** (auth + Postgres + RLS). The UI is **Next.js 15** (App Router) in the `web/` directory, designed for **Vercel**.
+A production-style app for indecisive viewers: **vibe** chips or **genre-strict** preferences, a **short curated shortlist** from TMDb, and a personal **watchlist / watched log** backed by **Supabase** (auth + Postgres + RLS). The UI is **Next.js 15** (App Router) in the `web/` directory, designed for **Vercel**.
 
 ## Prerequisites
 
@@ -72,7 +72,7 @@ Production builds intentionally use **`next build` without `--turbopack`**, beca
 
 ## Features
 
-- **Anonymous recommendations** — mood / tone / genres / runtime / era / streaming filters; results stored in `sessionStorage` until refresh.
+- **Anonymous recommendations** — vibes / genres / runtime / era / streaming filters; results stored in `sessionStorage` until refresh.
 - **Signed-in users** — watchlist, watched, dismissed titles stored in Supabase; recommendations exclude watched + dismissed; optional session logging.
 - **TMDb** — all movie calls go through the server (`TMDB_API_KEY` never exposed to the browser).
 

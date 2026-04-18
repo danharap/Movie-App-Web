@@ -48,7 +48,7 @@ const steps = [
   {
     n: "01",
     title: "Say how you feel",
-    body: "Mood, tone, runtime, era — a guided flow instead of infinite filters.",
+    body: "Vibe chips, optional strict genres, runtime, era — guided, not endless filters.",
   },
   {
     n: "02",
@@ -66,7 +66,7 @@ const pillars = [
   {
     icon: <IconSpark />,
     title: "Emotion-first matching",
-    body: "Mood and tone map to genres and discover rules you can tune over time.",
+    body: "Vibes map to genres and discover rules you can tune over time.",
   },
   {
     icon: <IconList />,
@@ -113,7 +113,7 @@ export function HomeLanding() {
               href="/recommend"
               className="inline-flex w-full min-w-[200px] items-center justify-center rounded-2xl bg-gradient-to-r from-amber-200 via-amber-100 to-amber-200 px-8 py-4 text-base font-semibold text-zinc-950 shadow-lg shadow-amber-950/30 transition hover:brightness-[1.03] sm:w-auto"
             >
-              Start the mood flow
+              Start picking
             </Link>
             <Link
               href="/login"

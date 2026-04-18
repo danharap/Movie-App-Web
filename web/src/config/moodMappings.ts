@@ -1,5 +1,6 @@
 /**
- * Maps moods / tones to TMDb genre IDs (discover with_genres).
+ * Maps vibe labels → TMDb genre IDs (discover with_genres).
+ * `VIBE_GENRE_IDS` merges the legacy mood + tone pools per key.
  * Tweak here without touching engine code.
  * @see https://developer.themoviedb.org/reference/genre-movie-list
  */
@@ -66,3 +67,23 @@ export const TONE_GENRE_IDS: Record<string, number[]> = {
 export function normalizeMoodKey(raw: string) {
   return raw.trim().toLowerCase().replace(/[\s-]+/g, "_");
 }
+
+function uniqIds(ids: number[]): number[] {
+  return [...new Set(ids.filter((n) => Number.isFinite(n)))];
+}
+
+/** Per-vibe genre pool: union of {@link MOOD_GENRE_IDS} and {@link TONE_GENRE_IDS}. */
+export const VIBE_GENRE_IDS: Record<string, number[]> = (() => {
+  const keys = new Set([
+    ...Object.keys(MOOD_GENRE_IDS),
+    ...Object.keys(TONE_GENRE_IDS),
+  ]);
+  const out: Record<string, number[]> = {};
+  for (const k of keys) {
+    out[k] = uniqIds([
+      ...(MOOD_GENRE_IDS[k] ?? []),
+      ...(TONE_GENRE_IDS[k] ?? []),
+    ]);
+  }
+  return out;
+})();

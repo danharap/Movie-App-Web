@@ -38,7 +38,7 @@ export function ResultsClient() {
       <div className="mx-auto max-w-lg px-4 py-24 text-center">
         <h1 className="text-2xl font-semibold text-white">No results here yet</h1>
         <p className="mt-3 text-sm text-zinc-400">
-          Run the mood flow first — we keep your shortlist in this browser session
+          Run the picker first — we keep your shortlist in this browser session
           until you refresh.
         </p>
         <Link
