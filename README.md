@@ -1,239 +1,88 @@
-# Movie App - Full Stack Application
+# Tonight — movie recommendation web app
 
-A modern movie recommendation and management application built with React (frontend) and FastAPI (backend) with PostgreSQL database.
+A production-style app for indecisive viewers: mood-led preferences, a **short curated shortlist** from TMDb, and a personal **watchlist / watched log** backed by **Supabase** (auth + Postgres + RLS). The UI is **Next.js 15** (App Router) in the `web/` directory, designed for **Vercel**.
 
-## 🚀 Quick Setup Guide
+## Prerequisites
 
-### Prerequisites
-- Python 3.12+ installed
-- Node.js 16+ and npm installed
-- PostgreSQL database (see setup options below)
+- Node.js 20+
+- A [Supabase](https://supabase.com/) project
+- A [TMDb](https://www.themoviedb.org/settings/api) API key
 
-### 1. Clone and Install Dependencies
+## 1. Database (Supabase)
+
+1. Create a project in the Supabase dashboard.
+2. Run the SQL migration in the SQL editor (or via Supabase CLI):
+
+   - File: [supabase/migrations/20250417000000_initial_schema.sql](supabase/migrations/20250417000000_initial_schema.sql)
+
+3. Authentication → URL configuration: add site URLs:
+
+   - `http://localhost:3000/**` (local)
+   - Your production URL (e.g. `https://your-app.vercel.app/**`)
+
+4. Copy **Project URL** and the **anon / public** key from **Project Settings → API** for env vars below.  
+   If the dashboard shows a **publishable** key (`sb_publishable_…`) and sign-in fails, use the **legacy anon** JWT (`eyJ…`) in `NEXT_PUBLIC_SUPABASE_ANON_KEY` instead — the JS client must match what your project expects.
+
+## 2. Local app
 
 ```bash
-# Frontend dependencies (already installed)
-cd frontend
+cd web
+cp .env.example .env.local
+# Fill in NEXT_PUBLIC_SUPABASE_*, TMDB_API_KEY, NEXT_PUBLIC_SITE_URL
 npm install
-
-# Backend dependencies (already installed with virtual environment)
-cd ../backend
-# Virtual environment and packages are already set up
+npm run dev
 ```
 
-### 2. Database Setup (Choose One Option)
+Open [http://localhost:3000](http://localhost:3000).
 
-#### Option A: Docker PostgreSQL (Recommended)
+## 3. Vercel deployment
+
+> **Important:** This repo’s Next.js app lives in **`web/`**, not the Git repository root.  
+> If **Root Directory** is not set to `web`, you will get **`404: NOT_FOUND`** on `*.vercel.app` (builds may look “successful” in a few seconds because almost nothing ran).  
+> Fix: [Vercel → Project → **Settings** → **General** → **Root Directory**](https://vercel.com/docs/deployments/configure-a-build#root-directory) → enter **`web`** → **Save** → **Redeploy**.
+
+1. Import the Git repository in Vercel.
+2. Set **Root Directory** to **`web`** (step above — do not skip).
+3. In **Vercel → Project → Settings → Environment Variables**, add **all** of the following for **Production** (and **Preview** if you use preview deploys):
+
+| Name | Environments | Notes |
+|------|----------------|------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Production, Preview, Development | Your Supabase project URL, e.g. `https://xxxx.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Production, Preview, Development | Public anon / publishable key from Supabase **API** settings |
+| `NEXT_PUBLIC_SITE_URL` | Production (required), Preview (optional) | **No trailing slash.** Production: `https://your-domain.vercel.app` (or your custom domain). For preview branches you can set the Vercel preview URL pattern or your default preview URL. |
+| `TMDB_READ_ACCESS_TOKEN` *or* `TMDB_API_KEY` | Production, Preview, Development | **Sensitive** — **do not** use `NEXT_PUBLIC_`. The app prefers **`TMDB_READ_ACCESS_TOKEN`** (Bearer, from TMDb **API Read Access Token**). If unset, it uses **`TMDB_API_KEY`** (v3 key in the query string). Set at least one. |
+
+You do **not** need `SUPABASE_SERVICE_ROLE_KEY` for the current app: all writes go through the logged-in user and RLS with the **anon** key.
+
+4. Redeploy after adding or changing variables (or use **Deployments → … → Redeploy**).
+
+**Still 404?** Confirm **Root Directory** is `web`, clear any custom **Output Directory** override under Build settings (Next.js should use the default), and open the deployment **Build Logs** — you should see `next build` running from the `web` package, not an empty install at repo root.
+
+**Supabase Auth:** Under **Authentication → URL configuration**, add your production site URL and Vercel preview URLs to **Redirect URLs** so email confirmation and OAuth return to your app.
+
+## Project layout
+
+| Path | Purpose |
+|------|---------|
+| [web/](web/) | Next.js application (UI, API routes, server actions) |
+| [supabase/migrations/](supabase/migrations/) | Postgres schema, RLS, profile trigger |
+| [archive/backend-fastapi/](archive/backend-fastapi/) | Legacy FastAPI stack (reference only) |
+
+## Features
+
+- **Anonymous recommendations** — mood / tone / genres / runtime / era / streaming filters; results stored in `sessionStorage` until refresh.
+- **Signed-in users** — watchlist, watched, dismissed titles stored in Supabase; recommendations exclude watched + dismissed; optional session logging.
+- **TMDb** — all movie calls go through the server (`TMDB_API_KEY` never exposed to the browser).
+
+## Scripts (from `web/`)
+
 ```bash
-# Install Docker Desktop, then run:
-docker run --name movieapp-postgres -e POSTGRES_PASSWORD=movieapp123 -e POSTGRES_DB=movieapp -p 5432:5432 -d postgres:15
+npm run dev      # development with Turbopack
+npm run build    # production build
+npm run start    # run production server
+npm run lint     # ESLint
 ```
 
-#### Option B: Local PostgreSQL Installation
-1. Download and install PostgreSQL from https://www.postgresql.org/download/
-2. Create a database named `movieapp`
-3. Create a user with password `movieapp123`
+## Legal
 
-### 3. Environment Configuration
-```bash
-# Backend environment is already configured in backend/.env
-# Optionally add your TMDB API key for movie data:
-# TMDB_API_KEY=your_api_key_here
-```
-
-### 4. Database Migration
-```bash
-cd backend
-# Activate virtual environment (if not already active)
-venv\Scripts\activate
-
-# Run database migrations
-alembic upgrade head
-```
-
-### 5. Start the Application
-```bash
-# From project root directory
-start-all.bat
-```
-
-This will start:
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000
-- API Documentation: http://localhost:8000/docs
-
-## Project Structure
-
-```
-MovieAppWeb/
-├── frontend/                 # React application
-│   ├── src/
-│   │   ├── components/      # React components
-│   │   ├── contexts/        # React contexts (Theme, etc.)
-│   │   └── utils/           # Utility functions
-│   ├── public/              # Public assets
-│   └── package.json         # Frontend dependencies
-├── backend/                 # FastAPI application
-│   ├── app/
-│   │   ├── api/            # API routes
-│   │   ├── core/           # Core configuration
-│   │   ├── models/         # Database models
-│   │   ├── schemas/        # Pydantic schemas
-│   │   └── services/       # Business logic
-│   ├── alembic/            # Database migrations
-│   ├── requirements.txt    # Python dependencies
-│   └── main.py            # FastAPI app entry point
-├── start-all.bat          # Start both frontend and backend
-├── start-frontend.bat     # Start only frontend
-└── README.md             # This file
-```
-
-## 🎬 Features
-
-### Frontend (React)
-- **Authentication**: Email/password login and signup with session persistence
-- **Home Dashboard**: Personalized greeting and quick navigation
-- **Movie Suggestions**: Multi-select genres, mood/tone selectors, custom requests
-- **Watch History**: Track watched movies with ratings and dates
-- **User Profile**: Account management and settings
-- **Modern UI**: Clean, professional design with smooth animations
-- **Dark Mode**: Default dark theme with toggle capability
-
-### Backend (FastAPI)
-- **RESTful API**: Complete CRUD operations for users and movies
-- **Authentication**: JWT-based authentication with password hashing
-- **Database**: PostgreSQL with SQLAlchemy ORM
-- **Movie Integration**: TMDB API integration for movie data
-- **Data Validation**: Pydantic schemas for request/response validation
-- **Database Migrations**: Alembic for schema versioning
-- **API Documentation**: Auto-generated with Swagger UI
-
-## 🚀 Tech Stack
-
-- **Frontend**: React 18, Tailwind CSS, Lucide React
-- **Backend**: FastAPI, SQLAlchemy, PostgreSQL
-- **Authentication**: JWT tokens, bcrypt password hashing
-- **Database**: PostgreSQL with Alembic migrations
-- **API Integration**: TMDB API for movie data
-- **Development**: Hot reload for both frontend and backend
-
-## �️ Development Commands
-
-### Start Both Services
-```bash
-# Start both frontend and backend
-start-all.bat
-
-# Or start individually:
-start-frontend.bat        # Frontend only
-cd backend && start.bat   # Backend only
-```
-
-### Database Management
-```bash
-cd backend
-venv\Scripts\activate
-
-# Create new migration
-alembic revision --autogenerate -m "description"
-
-# Apply migrations
-alembic upgrade head
-
-# View migration history
-alembic history
-```
-
-### API Testing
-- Interactive API docs: http://localhost:8000/docs
-- Alternative docs: http://localhost:8000/redoc
-- Test endpoints with curl or Postman
-
-## 🎨 Design Features
-
-- **Modern UI**: Clean, professional design with smooth animations
-- **Responsive**: Desktop-first design that works on all screen sizes
-- **Interactive**: Hover effects, transitions, and scroll-triggered animations
-- **Accessible**: Focus states and keyboard navigation
-- **Dark Mode**: Professional dark theme as default
-
-## 🔧 Configuration
-
-### Environment Variables
-Backend configuration in `backend/.env`:
-```env
-DATABASE_URL=postgresql://movieapp:movieapp123@localhost/movieapp
-SECRET_KEY=your-secret-key-here
-TMDB_API_KEY=your-tmdb-api-key-here  # Optional
-```
-
-### Frontend Configuration
-- API base URL configured in frontend for backend communication
-- Tailwind CSS for styling with custom theme
-- React Router for navigation (ready for implementation)
-
-## 🚀 Deployment
-
-### Frontend Build
-```bash
-cd frontend
-npm run build
-```
-
-### Backend Deployment
-```bash
-cd backend
-venv\Scripts\activate
-uvicorn main:app --host 0.0.0.0 --port 8000
-```
-
-### Database Setup for Production
-1. Set up PostgreSQL server
-2. Update DATABASE_URL in production environment
-3. Run migrations: `alembic upgrade head`
-
-## 📋 Troubleshooting
-
-### Common Issues
-
-**Database Connection Error**
-- Ensure PostgreSQL is running
-- Check DATABASE_URL in backend/.env
-- Verify database exists and credentials are correct
-
-**Frontend Not Loading**
-- Check if backend is running on port 8000
-- Verify frontend is running on port 3000
-- Check browser console for errors
-
-**Backend Import Errors**
-- Ensure virtual environment is activated
-- Install requirements: `pip install -r requirements.txt`
-- Check Python path is set correctly
-
-## 🔮 Next Development Steps
-
-### Immediate Tasks
-- [ ] Set up PostgreSQL database
-- [ ] Run initial database migrations
-- [ ] Test API endpoints
-- [ ] Connect frontend to backend API
-- [ ] Add TMDB API key for movie data
-
-### Future Enhancements
-- [ ] User authentication flow in frontend
-- [ ] Movie search and recommendation engine
-- [ ] Social features (friends, sharing)
-- [ ] Advanced filtering and search
-- [ ] Mobile responsive improvements
-- [ ] Movie trailers and images integration
-- [ ] Watchlist and favorites functionality
-- [ ] Performance optimization and caching
-
-## 📝 License
-
-This project is licensed under the MIT License.
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+This product uses the TMDb API but is not endorsed or certified by TMDb.
