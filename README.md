@@ -56,7 +56,9 @@ You do **not** need `SUPABASE_SERVICE_ROLE_KEY` for the current app: all writes 
 
 4. Redeploy after adding or changing variables (or use **Deployments → … → Redeploy**).
 
-**Still 404?** Confirm **Root Directory** is `web`, clear any custom **Output Directory** override under Build settings (Next.js should use the default), and open the deployment **Build Logs** — you should see `next build` running from the `web` package, not an empty install at repo root.
+**Still 404?** Confirm **Root Directory** is `web`, clear any custom **Output Directory** override under Build settings (Next.js should use the default), and open the deployment **Build Logs** — you should see `next build` (webpack) completing and route traces, not a near-instant “build” with no `next` output.
+
+Production builds intentionally use **`next build` without `--turbopack`**, because Turbopack production output on Vercel can still mis-deploy and surface as a platform **404 NOT_FOUND**.
 
 **Supabase Auth:** Under **Authentication → URL configuration**, add your production site URL and Vercel preview URLs to **Redirect URLs** so email confirmation and OAuth return to your app.
 
