@@ -74,3 +74,29 @@ export type MovieDetailsResponse = {
 export async function getMovieDetails(tmdbId: number) {
   return tmdbFetch<MovieDetailsResponse>(`/movie/${tmdbId}`);
 }
+
+export type MovieSearchResult = {
+  id: number;
+  title: string;
+  release_date: string;
+  poster_path: string | null;
+  vote_average: number;
+};
+
+export type MovieSearchResponse = {
+  page: number;
+  results: MovieSearchResult[];
+  total_results: number;
+};
+
+export async function searchMovies(query: string, page = "1") {
+  const q = query.trim();
+  if (!q) {
+    return { page: 1, results: [] as MovieSearchResult[], total_results: 0 };
+  }
+  return tmdbFetch<MovieSearchResponse>("/search/movie", {
+    query: q,
+    page,
+    include_adult: "false",
+  });
+}

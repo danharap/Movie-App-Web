@@ -1,3 +1,4 @@
+import { WatchedAddSearch } from "./WatchedAddSearch";
 import { posterUrl } from "@/lib/tmdb/constants";
 import { createClient } from "@/lib/supabase/server";
 import Image from "next/image";
@@ -43,12 +44,16 @@ export default async function WatchedPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
-      <header className="mb-10 space-y-2">
+      <header className="mb-8 space-y-2">
         <h1 className="text-3xl font-semibold text-white">Watched</h1>
         <p className="text-sm text-zinc-400">
           Your diary — titles here are excluded from future shortlists.
         </p>
       </header>
+
+      <WatchedAddSearch
+        alreadyWatchedTmdbIds={items.map(({ movie }) => movie.tmdb_id)}
+      />
 
       {items.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-white/15 bg-zinc-900/30 px-6 py-16 text-center">
