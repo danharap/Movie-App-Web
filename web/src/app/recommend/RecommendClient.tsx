@@ -1,5 +1,6 @@
 "use client";
 
+import { STORAGE_KEY_LAST_RECOMMENDATION } from "@/config/brand";
 import { TMDB_GENRE_OPTIONS } from "@/config/tmdbGenres";
 import type { RecommendationInput } from "@/features/recommendations/schema";
 import type { RecommendedMovie } from "@/types/movie";
@@ -27,8 +28,6 @@ const TONE_CHIPS = [
   "romantic",
   "epic",
 ];
-
-const STORAGE_KEY = "tonight:lastRecommendation";
 
 export function RecommendClient() {
   const router = useRouter();
@@ -97,7 +96,7 @@ export function RecommendClient() {
         throw new Error("No matches — try loosening filters.");
       }
       sessionStorage.setItem(
-        STORAGE_KEY,
+        STORAGE_KEY_LAST_RECOMMENDATION,
         JSON.stringify({ input: body, movies: data.movies }),
       );
       router.push("/results");
@@ -118,7 +117,7 @@ export function RecommendClient() {
           Step by step
         </p>
         <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-          How do you want to feel tonight?
+          What do you want to watch?
         </h1>
         <p className="max-w-xl text-sm leading-relaxed text-zinc-400">
           A few honest inputs — we&apos;ll hand back a tight shortlist, not an
@@ -167,8 +166,12 @@ export function RecommendClient() {
       </section>
 
       <section className="reveal space-y-3" style={{ animationDelay: "0.12s" }}>
-        <p className="text-sm font-medium text-zinc-300">
-          Genres you&apos;re open to
+        <p className="text-sm font-medium text-zinc-300">Genres (optional)</p>
+        <p className="text-xs leading-relaxed text-zinc-500">
+          When you pick genres here, they <span className="text-zinc-400">take over</span>{" "}
+          from mood — we only search within those categories and require real TMDb
+          genre tags (so a family comedy won&apos;t appear if you only chose Horror +
+          Thriller).
         </p>
         <div className="flex max-h-48 flex-wrap gap-2 overflow-y-auto pr-1">
           {TMDB_GENRE_OPTIONS.map((g) => (

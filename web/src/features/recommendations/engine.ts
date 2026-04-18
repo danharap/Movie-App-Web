@@ -3,9 +3,12 @@ import {
   TONE_GENRE_IDS,
   normalizeMoodKey,
 } from "@/config/moodMappings";
-import { discoverMovies, getMovieDetails } from "@/lib/tmdb/client";
+import { TMDB_GENRE_BY_ID } from "@/config/tmdbGenres";
+import { discoverMovies, getMovieDetails, type DiscoverResponse } from "@/lib/tmdb/client";
 import type { RecommendedMovie, RecommendationReason } from "@/types/movie";
 import type { RecommendationInput } from "./schema";
+
+type DiscoverMovie = DiscoverResponse["results"][number];
 
 function uniq(ids: number[]) {
   return [...new Set(ids.filter(Boolean))];
@@ -38,20 +41,50 @@ function yearFromDate(release_date: string) {
   return Number.isFinite(y) ? y : null;
 }
 
+function movieMatchesPickedGenres(
+  movieGenreIds: number[] | undefined,
+  picked: number[],
+  mode: "all" | "any",
+): boolean {
+  const g = movieGenreIds ?? [];
+  if (!picked.length) return true;
+  if (mode === "all") return picked.every((id) => g.includes(id));
+  return picked.some((id) => g.includes(id));
+}
+
+function pickedGenreNames(picked: number[]) {
+  return picked.map((id) => TMDB_GENRE_BY_ID[id] ?? `#${id}`).join(", ");
+}
+
 function buildReasons(
   input: RecommendationInput,
   movieGenreIds: number[],
   moodGenreSet: Set<number>,
+  opts: {
+    genreLock: boolean;
+    pickedGenres: number[];
+    pickedGenreMode: "all" | "any";
+  },
 ): RecommendationReason[] {
   const reasons: RecommendationReason[] = [];
-  reasons.push({ label: `Mood: ${input.mood.trim()}` });
-  for (const t of input.tone) {
-    reasons.push({ label: `Tone: ${t}` });
+
+  if (opts.genreLock && opts.pickedGenres.length) {
+    const modeLabel =
+      opts.pickedGenreMode === "all" ? "match all" : "match at least one";
+    reasons.push({
+      label: `Genres: ${pickedGenreNames(opts.pickedGenres)} (${modeLabel})`,
+    });
+  } else {
+    reasons.push({ label: `Mood: ${input.mood.trim()}` });
+    for (const t of input.tone) {
+      reasons.push({ label: `Tone: ${t}` });
+    }
+    const overlap = movieGenreIds.filter((id) => moodGenreSet.has(id));
+    if (overlap.length) {
+      reasons.push({ label: "Genre match for what you asked for" });
+    }
   }
-  const overlap = movieGenreIds.filter((id) => moodGenreSet.has(id));
-  if (overlap.length) {
-    reasons.push({ label: "Genre match for what you asked for" });
-  }
+
   if (input.hiddenGem) {
     reasons.push({ label: "Weighted toward strong ratings vs. hype" });
   }
@@ -61,36 +94,65 @@ function buildReasons(
   return reasons.slice(0, 5);
 }
 
+async function discoverPages(
+  baseParams: URLSearchParams,
+  maxPages: number,
+): Promise<DiscoverMovie[]> {
+  const merged: DiscoverMovie[] = [];
+  const seen = new Set<number>();
+
+  for (let page = 1; page <= maxPages; page++) {
+    const params = new URLSearchParams(baseParams);
+    params.set("page", String(page));
+    const data = await discoverMovies(params);
+    for (const r of data.results) {
+      if (!seen.has(r.id)) {
+        seen.add(r.id);
+        merged.push(r);
+      }
+    }
+    if (!data.results.length || page >= (data.total_pages ?? 1)) break;
+  }
+  return merged;
+}
+
 export async function runRecommendationEngine(
   input: RecommendationInput,
   excludeTmdbIds: Set<number>,
 ): Promise<RecommendedMovie[]> {
+  const userPicked = uniq(input.genres ?? []);
+  const genreLock = userPicked.length > 0;
+
   const moodKey = normalizeMoodKey(input.mood);
   const moodGenres = MOOD_GENRE_IDS[moodKey] ?? MOOD_GENRE_IDS.any;
-  let genreIds = [...moodGenres, ...input.genres];
-  for (const t of input.tone) {
-    const tk = normalizeMoodKey(t);
-    genreIds.push(...(TONE_GENRE_IDS[tk] ?? []));
-  }
-  genreIds = uniq(genreIds);
-
-  if (input.surpriseMe) {
-    genreIds = shuffle(genreIds, Math.random).slice(
-      0,
-      Math.max(3, Math.min(genreIds.length, 6)),
-    );
-  }
-
   const moodGenreSet = new Set(moodGenres);
 
+  let genreIdsForDiscover: number[] = [];
+
+  if (genreLock) {
+    genreIdsForDiscover = [...userPicked];
+  } else {
+    genreIdsForDiscover = [...moodGenres];
+    for (const t of input.tone) {
+      const tk = normalizeMoodKey(t);
+      genreIdsForDiscover.push(...(TONE_GENRE_IDS[tk] ?? []));
+    }
+    genreIdsForDiscover = uniq(genreIdsForDiscover);
+    if (input.surpriseMe && genreIdsForDiscover.length > 0) {
+      genreIdsForDiscover = shuffle(genreIdsForDiscover, Math.random).slice(
+        0,
+        Math.max(3, Math.min(genreIdsForDiscover.length, 6)),
+      );
+    }
+  }
+
   const params = new URLSearchParams();
-  params.set("page", "1");
   params.set("vote_count.gte", "60");
   params.set("vote_average.gte", String(input.minVoteAverage));
   params.set("include_adult", "false");
 
-  if (genreIds.length) {
-    params.set("with_genres", genreIds.join("|"));
+  if (genreIdsForDiscover.length) {
+    params.set("with_genres", genreIdsForDiscover.join("|"));
   }
   params.set("sort_by", input.hiddenGem ? "vote_average.desc" : "popularity.desc");
 
@@ -119,22 +181,32 @@ export async function runRecommendationEngine(
     params.set("with_watch_monetization_types", "flatrate");
   }
 
-  const first = await discoverMovies(params);
-  let results = [...first.results];
+  const maxPages = genreLock ? 6 : 2;
+  const results = await discoverPages(params, maxPages);
 
-  if (first.total_pages > 1 && results.length < 40) {
-    params.set("page", "2");
-    const second = await discoverMovies(params);
-    results = results.concat(second.results);
+  const baseFilter = (m: DiscoverMovie) =>
+    m.id &&
+    m.title &&
+    !excludeTmdbIds.has(m.id) &&
+    (m.vote_count ?? 0) >= 40;
+
+  let filtered = results.filter(baseFilter);
+  let pickedGenreMode: "all" | "any" = "any";
+
+  if (genreLock) {
+    const strictList = filtered.filter((m) =>
+      movieMatchesPickedGenres(m.genre_ids, userPicked, "all"),
+    );
+    if (strictList.length > 0) {
+      filtered = strictList;
+      pickedGenreMode = "all";
+    } else {
+      filtered = filtered.filter((m) =>
+        movieMatchesPickedGenres(m.genre_ids, userPicked, "any"),
+      );
+      pickedGenreMode = "any";
+    }
   }
-
-  const filtered = results.filter(
-    (m) =>
-      m.id &&
-      m.title &&
-      !excludeTmdbIds.has(m.id) &&
-      (m.vote_count ?? 0) >= 40,
-  );
 
   const scored = filtered
     .map((m) => ({
@@ -143,7 +215,7 @@ export async function runRecommendationEngine(
     }))
     .sort((a, b) => b.s - a.s);
 
-  const uniqueById = new Map<number, (typeof scored)[0]["m"]>();
+  const uniqueById = new Map<number, DiscoverMovie>();
   for (const { m } of scored) {
     if (!uniqueById.has(m.id)) uniqueById.set(m.id, m);
   }
@@ -161,11 +233,27 @@ export async function runRecommendationEngine(
     }),
   );
 
-  const out: RecommendedMovie[] = detailed.map(({ summary, details }) => {
+  const out: RecommendedMovie[] = [];
+
+  for (const { summary, details } of detailed) {
     const src = details ?? summary;
-    const genreIdsList = details?.genres?.map((g) => g.id) ?? summary.genre_ids ?? [];
-    const reasons = buildReasons(input, genreIdsList, moodGenreSet);
-    return {
+    const genreIdsList =
+      details?.genres?.map((g) => g.id) ?? summary.genre_ids ?? [];
+
+    if (
+      genreLock &&
+      !movieMatchesPickedGenres(genreIdsList, userPicked, pickedGenreMode)
+    ) {
+      continue;
+    }
+
+    const reasons = buildReasons(input, genreIdsList, moodGenreSet, {
+      genreLock,
+      pickedGenres: userPicked,
+      pickedGenreMode,
+    });
+
+    out.push({
       id: src.id,
       title: src.title,
       overview: src.overview,
@@ -181,8 +269,8 @@ export async function runRecommendationEngine(
         "release_date" in src ? src.release_date : summary.release_date,
       ),
       reasons,
-    };
-  });
+    });
+  }
 
   return out;
 }

@@ -1,3 +1,4 @@
+import { APP_NAME } from "@/config/brand";
 import Link from "next/link";
 
 function IconSpark() {
@@ -94,7 +95,7 @@ export function HomeLanding() {
       <section className="mx-auto max-w-6xl px-4 pb-20 pt-14 sm:px-6 sm:pt-20 lg:pt-28">
         <div className="mx-auto max-w-3xl text-center">
           <p className="reveal inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-xs font-medium uppercase tracking-[0.2em] text-amber-200/85">
-            Tonight
+            {APP_NAME}
           </p>
           <h1 className="reveal mt-8 text-4xl font-semibold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl">
             A calmer way to{" "}
@@ -181,7 +182,7 @@ export function HomeLanding() {
           actually trust.”
         </blockquote>
         <p className="reveal mt-6 text-xs uppercase tracking-[0.18em] text-zinc-600">
-          Tonight product direction
+          {APP_NAME} — product direction
         </p>
       </section>
 
@@ -192,7 +193,7 @@ export function HomeLanding() {
               Ready when you are
             </h2>
             <p className="mt-2 max-w-md text-sm text-zinc-500">
-              Two minutes of honest inputs. A shortlist you can act on tonight.
+              Two minutes of honest inputs. A shortlist you can start tonight.
             </p>
           </div>
           <Link

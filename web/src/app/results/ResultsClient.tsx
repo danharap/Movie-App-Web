@@ -1,11 +1,10 @@
 "use client";
 
+import { STORAGE_KEY_LAST_RECOMMENDATION } from "@/config/brand";
 import { MovieResultCard } from "@/features/movies/MovieResultCard";
 import type { RecommendedMovie } from "@/types/movie";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-
-const STORAGE_KEY = "tonight:lastRecommendation";
 
 type Stored = {
   input: unknown;
@@ -17,7 +16,7 @@ export function ResultsClient() {
 
   useEffect(() => {
     try {
-      const raw = sessionStorage.getItem(STORAGE_KEY);
+      const raw = sessionStorage.getItem(STORAGE_KEY_LAST_RECOMMENDATION);
       setData(raw ? (JSON.parse(raw) as Stored) : null);
     } catch {
       setData(null);

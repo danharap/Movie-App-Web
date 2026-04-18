@@ -1,6 +1,6 @@
-# Tonight — movie recommendation web app
+# Nudge Film — movie recommendation web app
 
-A production-style app for indecisive viewers: mood-led preferences, a **short curated shortlist** from TMDb, and a personal **watchlist / watched log** backed by **Supabase** (auth + Postgres + RLS). The UI is **Next.js 15** (App Router) in the `web/` directory, designed for **Vercel**.
+A production-style app for indecisive viewers: mood- or **genre-strict** preferences, a **short curated shortlist** from TMDb, and a personal **watchlist / watched log** backed by **Supabase** (auth + Postgres + RLS). The UI is **Next.js 15** (App Router) in the `web/` directory, designed for **Vercel**.
 
 ## Prerequisites
 

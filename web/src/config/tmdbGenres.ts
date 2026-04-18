@@ -20,3 +20,7 @@ export const TMDB_GENRE_OPTIONS = [
   { id: 10752, name: "War" },
   { id: 37, name: "Western" },
 ] as const;
+
+export const TMDB_GENRE_BY_ID: Record<number, string> = Object.fromEntries(
+  TMDB_GENRE_OPTIONS.map((g) => [g.id, g.name]),
+);

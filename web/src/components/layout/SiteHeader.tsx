@@ -1,4 +1,5 @@
 import { signOut } from "@/app/actions/auth";
+import { APP_NAME } from "@/config/brand";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
@@ -22,8 +23,8 @@ export async function SiteHeader() {
           href="/"
           className="shrink-0 text-lg font-semibold tracking-tight text-white sm:text-xl"
         >
-          <span className="text-amber-200/90">Tonight</span>
-          <span className="text-zinc-400"> — movies</span>
+          <span className="text-amber-200/90">{APP_NAME}</span>
+          <span className="text-zinc-400"> — pick fast</span>
         </Link>
         <nav className="flex flex-wrap items-center gap-1 sm:flex-1 sm:justify-center">
           {links.map((l) => (

@@ -1,4 +1,5 @@
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import { APP_NAME } from "@/config/brand";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -14,9 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Tonight — mood-led movie picks",
+  title: `${APP_NAME} — quick picks & your watch log`,
   description:
-    "A calmer way to choose a film: mood-led shortlists from TMDb, watchlist and watched log in Supabase — built for Vercel.",
+    `${APP_NAME}: strict genre-aware suggestions from TMDb, plus watchlist and watched history in Supabase.`,
 };
 
 export default function RootLayout({
