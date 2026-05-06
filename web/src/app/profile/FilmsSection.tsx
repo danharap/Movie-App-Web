@@ -61,10 +61,8 @@ export function FilmsSection({
       list = list.filter((f) => f.movie.tmdb_id < TV_TMDB_OFFSET);
     } else if (contentType === "tv") {
       list = list.filter((f) => f.movie.tmdb_id >= TV_TMDB_OFFSET);
-    } else {
-      // "all": exclude raw seasons from the top-level view — they belong under their show
-      list = list.filter((f) => f.movie.tmdb_id < TV_SEASON_OFFSET);
     }
+    // "all": full diary — movies, whole shows, and per-season logs
     if (genreFilter !== null) {
       list = list.filter((f) =>
         (f.movie.genres ?? []).some((g) => g.id === genreFilter),

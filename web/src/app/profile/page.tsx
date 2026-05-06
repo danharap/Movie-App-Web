@@ -222,8 +222,7 @@ export default async function ProfilePage() {
   const isPublic = (profile?.is_public as boolean) ?? true;
   const watchlistPublic = (profile?.watchlist_public as boolean) ?? true;
 
-  // Exclude TV seasons (no standalone page) from the quick preview row
-  const recent = watched.filter((w) => w.movie.tmdb_id < TV_SEASON_OFFSET).slice(0, 6);
+  const recent = watched.slice(0, 6);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
@@ -305,9 +304,14 @@ export default async function ProfilePage() {
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
             {recent.map(({ movie, user_rating }) => {
               const poster = posterUrl(movie.poster_path, "w342");
-              const href = movie.tmdb_id >= TV_TMDB_OFFSET
-                ? `/show/${movie.tmdb_id - TV_TMDB_OFFSET}`
-                : `/movie/${movie.tmdb_id}`;
+              const href =
+                movie.tmdb_id >= TV_SEASON_OFFSET
+                  ? movie.vote_count != null
+                    ? `/show/${movie.vote_count}`
+                    : "/browse?type=tv"
+                  : movie.tmdb_id >= TV_TMDB_OFFSET
+                    ? `/show/${movie.tmdb_id - TV_TMDB_OFFSET}`
+                    : `/movie/${movie.tmdb_id}`;
               return (
                 <div key={movie.id} className="group relative">
                   <Link
