@@ -5,7 +5,7 @@ import { FilmsSection } from "./FilmsSection";
 import { ProfileListsSection } from "./ProfileListsSection";
 import { FeedbackForm } from "@/app/feedback/FeedbackForm";
 import { getOwnFeedback } from "@/features/feedback/service";
-import { posterUrl } from "@/lib/tmdb/constants";
+import { posterUrl, TV_TMDB_OFFSET, TV_SEASON_OFFSET } from "@/lib/tmdb/constants";
 import { createClient } from "@/lib/supabase/server";
 import Image from "next/image";
 import Link from "next/link";
@@ -116,6 +116,11 @@ async function loadProfile() {
       ? rated.reduce((s, w) => s + (w.user_rating ?? 0), 0) / rated.length
       : null;
 
+  const movieCount = watched.filter((w) => w.movie.tmdb_id < TV_TMDB_OFFSET).length;
+  const showCount = watched.filter(
+    (w) => w.movie.tmdb_id >= TV_TMDB_OFFSET && w.movie.tmdb_id < TV_SEASON_OFFSET,
+  ).length;
+
   const watchlist = (watchlistRows ?? []).flatMap((r) => {
     const m = r.movies as MovieRow | MovieRow[] | null;
     if (!m) return [];
@@ -177,6 +182,8 @@ async function loadProfile() {
     ownReview,
     stats: {
       totalWatched: watched.length,
+      movieCount,
+      showCount,
       avgRating,
       following: followingCount ?? 0,
       followers: followersCount ?? 0,
@@ -215,7 +222,8 @@ export default async function ProfilePage() {
   const isPublic = (profile?.is_public as boolean) ?? true;
   const watchlistPublic = (profile?.watchlist_public as boolean) ?? true;
 
-  const recent = watched.slice(0, 6);
+  // Exclude TV seasons (no standalone page) from the quick preview row
+  const recent = watched.filter((w) => w.movie.tmdb_id < TV_SEASON_OFFSET).slice(0, 6);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
@@ -263,9 +271,10 @@ export default async function ProfilePage() {
       </div>
 
       {/* ── Stats ── */}
-      <div className="mb-10 grid grid-cols-2 gap-3">
+      <div className="mb-10 grid grid-cols-3 gap-3">
         {[
-          { label: "Films", value: stats.totalWatched },
+          { label: "Films", value: stats.movieCount },
+          { label: "Series", value: stats.showCount },
           { label: "Avg Rating", value: stats.avgRating != null ? `${stats.avgRating.toFixed(1)}` : "—" },
         ].map(({ label, value }) => (
           <div key={label} className="rounded-2xl border border-white/[0.07] bg-zinc-900/40 px-4 py-5 text-center">
@@ -296,10 +305,13 @@ export default async function ProfilePage() {
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
             {recent.map(({ movie, user_rating }) => {
               const poster = posterUrl(movie.poster_path, "w342");
+              const href = movie.tmdb_id >= TV_TMDB_OFFSET
+                ? `/show/${movie.tmdb_id - TV_TMDB_OFFSET}`
+                : `/movie/${movie.tmdb_id}`;
               return (
                 <div key={movie.id} className="group relative">
                   <Link
-                    href={`/movie/${movie.tmdb_id}`}
+                    href={href}
                     className="relative block aspect-[2/3] overflow-hidden rounded-xl bg-zinc-800 ring-0 transition hover:ring-1 hover:ring-indigo-400/30"
                   >
                     {poster ? (
@@ -361,10 +373,13 @@ export default async function ProfilePage() {
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
             {watchlist.slice(0, 12).map(({ movie }) => {
               const poster = posterUrl(movie.poster_path, "w342");
+              const wHref = movie.tmdb_id >= TV_TMDB_OFFSET
+                ? `/show/${movie.tmdb_id - TV_TMDB_OFFSET}`
+                : `/movie/${movie.tmdb_id}`;
               return (
                 <Link
                   key={movie.id}
-                  href={`/movie/${movie.tmdb_id}`}
+                  href={wHref}
                   className="group relative block aspect-[2/3] overflow-hidden rounded-xl bg-zinc-800 ring-0 transition hover:ring-1 hover:ring-indigo-400/30"
                 >
                   {poster ? (

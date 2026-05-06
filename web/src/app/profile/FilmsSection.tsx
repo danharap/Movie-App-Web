@@ -1,6 +1,6 @@
 "use client";
 
-import { posterUrl } from "@/lib/tmdb/constants";
+import { posterUrl, TV_TMDB_OFFSET, TV_SEASON_OFFSET } from "@/lib/tmdb/constants";
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -20,6 +20,7 @@ export type WatchedFilm = {
 };
 
 type Sort = "date-desc" | "date-asc" | "rating-desc" | "rating-asc" | "title";
+type ContentType = "all" | "movies" | "tv";
 
 const SORT_LABELS: Record<Sort, string> = {
   "date-desc": "Latest",
@@ -37,6 +38,7 @@ export function FilmsSection({
   total: number;
 }) {
   const [sort, setSort] = useState<Sort>("date-desc");
+  const [contentType, setContentType] = useState<ContentType>("all");
   const [genreFilter, setGenreFilter] = useState<number | null>(null);
 
   const availableGenres = useMemo<Genre[]>(() => {
@@ -52,7 +54,14 @@ export function FilmsSection({
   }, [films]);
 
   const sorted = useMemo(() => {
-    let list = [...films];
+    // Always exclude TV seasons (they're sub-items of shows, no standalone page)
+    let list = films.filter((f) => f.movie.tmdb_id < TV_SEASON_OFFSET);
+    // Content type filter
+    if (contentType === "movies") {
+      list = list.filter((f) => f.movie.tmdb_id < TV_TMDB_OFFSET);
+    } else if (contentType === "tv") {
+      list = list.filter((f) => f.movie.tmdb_id >= TV_TMDB_OFFSET);
+    }
     if (genreFilter !== null) {
       list = list.filter((f) =>
         (f.movie.genres ?? []).some((g) => g.id === genreFilter),
@@ -83,8 +92,8 @@ export function FilmsSection({
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-white">
-          Films{" "}
-          <span className="text-sm font-normal text-zinc-500">({total})</span>
+          {contentType === "tv" ? "Series" : contentType === "movies" ? "Films" : "All Watched"}{" "}
+          <span className="text-sm font-normal text-zinc-500">({sorted.length})</span>
         </h2>
         <Link
           href="/watched"
@@ -108,6 +117,23 @@ export function FilmsSection({
         <>
           {/* Controls */}
           <div className="mb-4 space-y-3">
+            {/* Content type filter */}
+            <div className="flex gap-1.5">
+              {(["all", "movies", "tv"] as ContentType[]).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => { setContentType(t); setGenreFilter(null); }}
+                  className={`rounded-full px-4 py-1.5 text-xs font-medium transition ${
+                    contentType === t
+                      ? "bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-400/30"
+                      : "bg-zinc-800/60 text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  {t === "all" ? "All" : t === "movies" ? "Movies" : "TV Shows"}
+                </button>
+              ))}
+            </div>
+
             {/* Sort — scrollable row on mobile */}
             <div className="flex items-center gap-2">
               <span className="shrink-0 text-xs text-zinc-500">Sort</span>
@@ -181,10 +207,13 @@ export function FilmsSection({
             <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 lg:grid-cols-8">
               {sorted.map(({ movie, user_rating }) => {
                 const poster = posterUrl(movie.poster_path, "w342");
+                const href = movie.tmdb_id >= TV_TMDB_OFFSET
+                  ? `/show/${movie.tmdb_id - TV_TMDB_OFFSET}`
+                  : `/movie/${movie.tmdb_id}`;
                 return (
                   <div key={movie.id} className="group relative">
                     <Link
-                      href={`/movie/${movie.tmdb_id}`}
+                      href={href}
                       title={movie.title}
                       className="relative block aspect-[2/3] overflow-hidden rounded-lg bg-zinc-800 ring-0 transition hover:ring-1 hover:ring-indigo-400/30"
                     >
@@ -204,6 +233,11 @@ export function FilmsSection({
                         </div>
                       )}
                     </Link>
+                    {movie.tmdb_id >= TV_TMDB_OFFSET && (
+                      <span className="absolute left-1 top-1 rounded bg-violet-600/80 px-1 py-0.5 text-[8px] font-bold text-white">
+                        TV
+                      </span>
+                    )}
                     {user_rating != null && (
                       <span className="absolute bottom-1 right-1 rounded bg-black/80 px-1 py-0.5 text-[9px] font-semibold text-indigo-200 ring-1 ring-white/10">
                         {user_rating}
