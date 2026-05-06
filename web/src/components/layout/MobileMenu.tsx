@@ -4,6 +4,7 @@ import { signOut } from "@/app/actions/auth";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 
 type NavLink = { href: string; label: string };
@@ -17,67 +18,57 @@ type Props = {
   authedLinks: NavLink[];
 };
 
-export function MobileMenu({ user, avatarUrl, displayName, isAdmin, publicLinks, authedLinks }: Props) {
+export function MobileMenu({
+  user,
+  avatarUrl,
+  displayName,
+  isAdmin,
+  publicLinks,
+  authedLinks,
+}: Props) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
 
-  // Close drawer on navigation
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
+  // Must be mounted before we can portal to document.body
+  useEffect(() => setMounted(true), []);
 
-  // Prevent body scroll when drawer is open
+  // Close on route change
+  useEffect(() => { setOpen(false); }, [pathname]);
+
+  // Lock body scroll
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
   }, [open]);
 
   const allLinks = [...publicLinks, ...(user ? authedLinks : [])];
 
-  return (
+  const drawer = (
     <>
-      {/* Hamburger button — only visible on mobile */}
-      <button
-        type="button"
-        className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-zinc-400 transition hover:border-white/20 hover:text-white md:hidden"
-        onClick={() => setOpen(true)}
-        aria-label="Open menu"
-        aria-expanded={open}
-        aria-controls="mobile-drawer"
-      >
-        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden>
-          <path d="M1.5 3.5h12M1.5 7.5h12M1.5 11.5h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      </button>
+      {/* Dark backdrop — click to close */}
+      <div
+        aria-hidden
+        onClick={() => setOpen(false)}
+        className={`fixed inset-0 z-[9998] bg-black/70 transition-opacity duration-300 md:hidden ${
+          open ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+      />
 
-      {/* Backdrop */}
-      {open && (
-        <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
-          style={{ animation: "fadeInBackdrop 0.2s ease forwards" }}
-          onClick={() => setOpen(false)}
-          aria-hidden
-        />
-      )}
-
-      {/* Drawer — fully opaque so content behind doesn't bleed through */}
+      {/* Drawer — portalled to <body> so it is never clipped by the header's
+          backdrop-filter stacking context (iOS Safari bug) */}
       <div
         id="mobile-drawer"
         role="dialog"
         aria-modal="true"
         aria-label="Navigation menu"
-        className={`fixed inset-y-0 right-0 z-50 flex w-[min(80vw,300px)] flex-col border-l border-white/[0.08] bg-[#09090b] shadow-2xl shadow-black/80 transition-transform duration-300 ease-out md:hidden ${
+        className={`fixed inset-y-0 right-0 z-[9999] flex w-[min(80vw,300px)] flex-col border-l border-white/[0.08] shadow-2xl transition-transform duration-300 ease-out md:hidden ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
+        style={{ backgroundColor: "#09090b" }}
       >
-        {/* Drawer header */}
-        <div className="flex items-center justify-between border-b border-white/[0.08] px-5 py-4">
+        {/* Header */}
+        <div className="flex shrink-0 items-center justify-between border-b border-white/[0.08] px-5 py-4">
           <Link
             href="/"
             className="text-sm font-semibold text-indigo-300"
@@ -97,7 +88,7 @@ export function MobileMenu({ user, avatarUrl, displayName, isAdmin, publicLinks,
           </button>
         </div>
 
-        {/* Nav links */}
+        {/* Nav links — fills remaining height */}
         <nav className="flex flex-1 flex-col overflow-y-auto px-3 py-2">
           <div className="space-y-0.5">
             {allLinks.map((l) => (
@@ -131,8 +122,8 @@ export function MobileMenu({ user, avatarUrl, displayName, isAdmin, publicLinks,
           )}
         </nav>
 
-        {/* Footer auth section */}
-        <div className="border-t border-white/[0.08] p-4">
+        {/* Footer — profile / auth */}
+        <div className="shrink-0 border-t border-white/[0.08] p-4">
           {user ? (
             <div className="space-y-2">
               <Link
@@ -190,6 +181,27 @@ export function MobileMenu({ user, avatarUrl, displayName, isAdmin, publicLinks,
           )}
         </div>
       </div>
+    </>
+  );
+
+  return (
+    <>
+      {/* Hamburger — visible only on mobile */}
+      <button
+        type="button"
+        className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-zinc-400 transition hover:border-white/20 hover:text-white md:hidden"
+        onClick={() => setOpen(true)}
+        aria-label="Open menu"
+        aria-expanded={open}
+        aria-controls="mobile-drawer"
+      >
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden>
+          <path d="M1.5 3.5h12M1.5 7.5h12M1.5 11.5h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      </button>
+
+      {/* Portal drawer to <body> to escape header's backdrop-filter stacking context */}
+      {mounted && createPortal(drawer, document.body)}
     </>
   );
 }
