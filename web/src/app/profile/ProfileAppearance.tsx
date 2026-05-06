@@ -6,8 +6,10 @@ import { Check, Loader2, X, ZoomIn, ZoomOut } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import Cropper from "react-easy-crop";
 import type { Area } from "react-easy-crop";
+import { toast } from "sonner";
 
 const BANNER_ASPECT = 21 / 9;
 const BACKDROP_ASPECT = 16 / 9;
@@ -61,13 +63,19 @@ export function ProfileAppearance({
   username,
   bannerUrl: initialBanner,
   profileBackgroundUrl: initialBg,
+  embedded = false,
 }: {
   userId: string;
   username: string | null;
   bannerUrl: string | null;
   profileBackgroundUrl: string | null;
+  /** When true, tighter spacing for inside Edit profile panel */
+  embedded?: boolean;
 }) {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(typeof document !== "undefined"), []);
+
   const [bannerUrl, setBannerUrl] = useState(initialBanner);
   const [bgUrl, setBgUrl] = useState(initialBg);
 
@@ -75,6 +83,7 @@ export function ProfileAppearance({
     setBannerUrl(initialBanner);
     setBgUrl(initialBg);
   }, [initialBanner, initialBg]);
+
   const [status, setStatus] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -85,6 +94,15 @@ export function ProfileAppearance({
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+
+  useEffect(() => {
+    if (!cropSrc) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [cropSrc]);
 
   const onCropComplete = useCallback((_: Area, pixels: Area) => {
     setCroppedAreaPixels(pixels);
@@ -114,16 +132,22 @@ export function ProfileAppearance({
     if (cropSrc) URL.revokeObjectURL(cropSrc);
     setCropSrc(null);
     setCropKind(null);
+    setCroppedAreaPixels(null);
   }
 
   function confirmCrop() {
-    if (!cropSrc || !croppedAreaPixels || !cropKind) return;
+    if (!cropSrc || !cropKind) return;
+    if (!croppedAreaPixels) {
+      toast.error("Image is still loading — wait a moment or pinch to adjust, then tap Save.");
+      return;
+    }
 
     const kind = cropKind;
     const src = cropSrc;
     const pixels = croppedAreaPixels;
     setCropSrc(null);
     setCropKind(null);
+    setCroppedAreaPixels(null);
 
     setStatus("Uploading…");
     startTransition(async () => {
@@ -154,11 +178,14 @@ export function ProfileAppearance({
         if (kind === "banner") setBannerUrl(url);
         else setBgUrl(url);
 
-        setStatus(kind === "banner" ? "Banner saved." : "Background saved.");
+        toast.success(kind === "banner" ? "Banner saved." : "Backdrop saved.");
+        setStatus(null);
         if (username) await revalidateUsernameProfile(username);
         router.refresh();
       } catch (e) {
-        setStatus(e instanceof Error ? e.message : "Upload failed.");
+        const msg = e instanceof Error ? e.message : "Upload failed.";
+        setStatus(msg);
+        toast.error(msg);
       }
     });
   }
@@ -181,11 +208,14 @@ export function ProfileAppearance({
         if (kind === "banner") setBannerUrl(null);
         else setBgUrl(null);
 
-        setStatus(kind === "banner" ? "Banner removed." : "Background removed.");
+        toast.success(kind === "banner" ? "Banner removed." : "Backdrop removed.");
+        setStatus(null);
         if (username) await revalidateUsernameProfile(username);
         router.refresh();
       } catch (e) {
-        setStatus(e instanceof Error ? e.message : "Could not remove.");
+        const msg = e instanceof Error ? e.message : "Could not remove.";
+        setStatus(msg);
+        toast.error(msg);
       }
     });
   }
@@ -193,33 +223,153 @@ export function ProfileAppearance({
   const aspect =
     cropKind === "banner" ? BANNER_ASPECT : cropKind === "backdrop" ? BACKDROP_ASPECT : 1;
 
+  const cropModal =
+    cropSrc && cropKind && mounted ? (
+      <div
+        className="fixed inset-0 z-[9999] flex flex-col bg-[#09090b]"
+        style={{
+          paddingTop: "env(safe-area-inset-top)",
+          paddingBottom: "env(safe-area-inset-bottom)",
+        }}
+      >
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-white/10 px-3 py-2 sm:px-4 sm:py-3">
+          <button
+            type="button"
+            onClick={cancelCrop}
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-zinc-400 hover:bg-white/10 hover:text-white sm:gap-1.5 sm:px-3"
+            aria-label="Cancel crop"
+          >
+            <X className="h-5 w-5 shrink-0 sm:h-4 sm:w-4" />
+            <span className="hidden text-sm sm:inline">Cancel</span>
+          </button>
+          <h2 className="min-w-0 truncate text-center text-xs font-semibold text-white sm:text-sm">
+            {cropKind === "banner" ? "Crop banner (21∶9)" : "Crop backdrop (16∶9)"}
+          </h2>
+          <button
+            type="button"
+            onClick={confirmCrop}
+            disabled={isPending || !croppedAreaPixels}
+            className="flex min-h-[44px] items-center justify-center gap-1 rounded-full bg-indigo-500 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-400 disabled:opacity-40 sm:px-4"
+          >
+            {isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+            ) : (
+              <Check className="h-4 w-4 shrink-0 sm:hidden" aria-hidden />
+            )}
+            <span>{isPending ? "…" : "Save"}</span>
+          </button>
+        </div>
+
+        <div className="relative min-h-0 flex-1">
+          <Cropper
+            image={cropSrc}
+            crop={crop}
+            zoom={zoom}
+            aspect={aspect}
+            cropShape="rect"
+            showGrid
+            onCropChange={setCrop}
+            onZoomChange={setZoom}
+            onCropComplete={onCropComplete}
+            style={{
+              containerStyle: {
+                background: "#09090b",
+              },
+              cropAreaStyle: {
+                border: "2px solid rgba(129, 140, 248, 0.85)",
+              },
+            }}
+          />
+        </div>
+
+        <div className="shrink-0 space-y-3 border-t border-white/10 bg-zinc-950 px-4 py-3">
+          <div className="flex items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => setZoom((z) => Math.max(1, z - 0.1))}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-zinc-400 hover:bg-white/10 hover:text-white"
+              aria-label="Zoom out"
+            >
+              <ZoomOut className="h-5 w-5" />
+            </button>
+            <input
+              type="range"
+              min={1}
+              max={3}
+              step={0.05}
+              value={zoom}
+              onChange={(e) => setZoom(Number(e.target.value))}
+              className="h-11 min-w-0 flex-1 max-w-xs accent-indigo-400"
+              aria-label="Zoom"
+            />
+            <button
+              type="button"
+              onClick={() => setZoom((z) => Math.min(3, z + 0.1))}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-zinc-400 hover:bg-white/10 hover:text-white"
+              aria-label="Zoom in"
+            >
+              <ZoomIn className="h-5 w-5" />
+            </button>
+          </div>
+
+          {!croppedAreaPixels ? (
+            <p className="text-center text-[11px] text-zinc-500">Preparing crop…</p>
+          ) : null}
+
+          <div className="flex gap-2 sm:hidden">
+            <button
+              type="button"
+              onClick={cancelCrop}
+              className="flex min-h-[48px] flex-1 items-center justify-center rounded-xl border border-white/15 text-sm font-medium text-zinc-300"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={confirmCrop}
+              disabled={isPending || !croppedAreaPixels}
+              className="flex min-h-[48px] flex-[1.15] items-center justify-center gap-2 rounded-xl bg-indigo-500 text-sm font-semibold text-white disabled:opacity-40"
+            >
+              {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+              Save & upload
+            </button>
+          </div>
+        </div>
+      </div>
+    ) : null;
+
   return (
     <>
-      <div className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-4 sm:p-5">
+      <div
+        className={
+          embedded
+            ? "border-t border-white/10 pt-4 mt-4"
+            : "mt-6 rounded-2xl border border-white/10 bg-black/25 p-4 sm:p-5"
+        }
+      >
         <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
-          Profile look
+          Banner & backdrop
         </h3>
         <p className="mt-1 text-[11px] leading-relaxed text-zinc-500">
-          Add a wide banner and an optional backdrop for your profile and public URL — same idea as Letterboxd
-          patron extras, using your own art.
+          Optional wide banner and page background for your profile (shown on your public link too).
         </p>
 
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-zinc-400">Banner</p>
-            <div className="relative aspect-[21/9] w-full overflow-hidden rounded-xl border border-white/10 bg-zinc-900/80">
+        <div className="mt-3 grid max-w-full gap-4 sm:grid-cols-2">
+          <div className="min-w-0 space-y-2">
+            <p className="text-xs font-medium text-zinc-400">Banner · 21∶9</p>
+            <div className="relative aspect-[21/9] w-full max-h-[120px] overflow-hidden rounded-lg border border-white/10 bg-zinc-900/80 sm:max-h-none sm:rounded-xl">
               {bannerUrl ? (
                 <Image
                   src={bannerUrl}
                   alt=""
                   fill
                   className="object-cover"
-                  sizes="(max-width:896px) 100vw, 896px"
+                  sizes="(max-width:640px) 100vw, 448px"
                   unoptimized
                 />
               ) : (
-                <div className="flex h-full items-center justify-center text-[10px] text-zinc-600">
-                  21∶9 banner preview
+                <div className="flex h-full items-center justify-center px-2 text-center text-[10px] text-zinc-600">
+                  Preview after upload
                 </div>
               )}
             </div>
@@ -235,7 +385,7 @@ export function ProfileAppearance({
                 type="button"
                 disabled={isPending}
                 onClick={() => bannerInputRef.current?.click()}
-                className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-zinc-200 transition hover:border-indigo-400/30 hover:text-white disabled:opacity-50"
+                className="min-h-[40px] rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs text-zinc-200 transition hover:border-indigo-400/30 hover:text-white disabled:opacity-50"
               >
                 Upload banner
               </button>
@@ -244,7 +394,7 @@ export function ProfileAppearance({
                   type="button"
                   disabled={isPending}
                   onClick={() => clear("banner")}
-                  className="rounded-full px-3 py-1.5 text-xs text-zinc-500 hover:text-zinc-300 disabled:opacity-50"
+                  className="min-h-[40px] rounded-full px-3 py-2 text-xs text-zinc-500 hover:text-zinc-300 disabled:opacity-50"
                 >
                   Remove
                 </button>
@@ -252,21 +402,21 @@ export function ProfileAppearance({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-zinc-400">Page background</p>
-            <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-white/10 bg-zinc-900/80">
+          <div className="min-w-0 space-y-2">
+            <p className="text-xs font-medium text-zinc-400">Page background · 16∶9</p>
+            <div className="relative aspect-video w-full max-h-[140px] overflow-hidden rounded-lg border border-white/10 bg-zinc-900/80 sm:max-h-none sm:rounded-xl">
               {bgUrl ? (
                 <Image
                   src={bgUrl}
                   alt=""
                   fill
                   className="object-cover"
-                  sizes="400px"
+                  sizes="(max-width:640px) 100vw, 360px"
                   unoptimized
                 />
               ) : (
-                <div className="flex h-full items-center justify-center px-4 text-center text-[10px] text-zinc-600">
-                  16∶9 backdrop (fills page behind content)
+                <div className="flex h-full items-center justify-center px-2 text-center text-[10px] text-zinc-600">
+                  Full-page backdrop behind content
                 </div>
               )}
             </div>
@@ -282,7 +432,7 @@ export function ProfileAppearance({
                 type="button"
                 disabled={isPending}
                 onClick={() => bgInputRef.current?.click()}
-                className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-zinc-200 transition hover:border-indigo-400/30 hover:text-white disabled:opacity-50"
+                className="min-h-[40px] rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs text-zinc-200 transition hover:border-indigo-400/30 hover:text-white disabled:opacity-50"
               >
                 Upload backdrop
               </button>
@@ -291,7 +441,7 @@ export function ProfileAppearance({
                   type="button"
                   disabled={isPending}
                   onClick={() => clear("backdrop")}
-                  className="rounded-full px-3 py-1.5 text-xs text-zinc-500 hover:text-zinc-300 disabled:opacity-50"
+                  className="min-h-[40px] rounded-full px-3 py-2 text-xs text-zinc-500 hover:text-zinc-300 disabled:opacity-50"
                 >
                   Remove
                 </button>
@@ -308,74 +458,7 @@ export function ProfileAppearance({
         ) : null}
       </div>
 
-      {cropSrc && cropKind && (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-black/95">
-          <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-            <button
-              type="button"
-              onClick={cancelCrop}
-              className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-zinc-400 hover:text-white"
-            >
-              <X className="h-4 w-4" />
-              Cancel
-            </button>
-            <h2 className="text-sm font-semibold text-white">
-              {cropKind === "banner" ? "Crop banner (21∶9)" : "Crop backdrop (16∶9)"}
-            </h2>
-            <button
-              type="button"
-              onClick={confirmCrop}
-              disabled={isPending}
-              className="flex items-center gap-1.5 rounded-full bg-indigo-500 px-4 py-1.5 text-sm font-semibold text-white hover:bg-indigo-400 disabled:opacity-50"
-            >
-              <Check className="h-4 w-4" />
-              Save
-            </button>
-          </div>
-
-          <div className="relative flex-1">
-            <Cropper
-              image={cropSrc}
-              crop={crop}
-              zoom={zoom}
-              aspect={aspect}
-              cropShape="rect"
-              showGrid
-              onCropChange={setCrop}
-              onZoomChange={setZoom}
-              onCropComplete={onCropComplete}
-              style={{ containerStyle: { background: "#09090b" } }}
-            />
-          </div>
-
-          <div className="flex items-center justify-center gap-4 border-t border-white/10 px-6 py-4">
-            <button
-              type="button"
-              onClick={() => setZoom((z) => Math.max(1, z - 0.1))}
-              className="rounded-full p-2 text-zinc-400 hover:bg-white/10 hover:text-white"
-            >
-              <ZoomOut className="h-5 w-5" />
-            </button>
-            <input
-              type="range"
-              min={1}
-              max={3}
-              step={0.05}
-              value={zoom}
-              onChange={(e) => setZoom(Number(e.target.value))}
-              className="w-48 accent-indigo-400"
-              aria-label="Zoom"
-            />
-            <button
-              type="button"
-              onClick={() => setZoom((z) => Math.min(3, z + 0.1))}
-              className="rounded-full p-2 text-zinc-400 hover:bg-white/10 hover:text-white"
-            >
-              <ZoomIn className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-      )}
+      {mounted && cropModal ? createPortal(cropModal, document.body) : null}
     </>
   );
 }

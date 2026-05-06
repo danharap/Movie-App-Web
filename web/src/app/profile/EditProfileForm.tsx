@@ -1,22 +1,29 @@
 "use client";
 
 import { updateProfile } from "@/app/actions/social";
+import { ProfileAppearance } from "./ProfileAppearance";
 import { useState, useTransition } from "react";
 
 type Props = {
+  userId: string;
   username: string | null;
   displayName: string | null;
   bio: string | null;
   isPublic: boolean;
   watchlistPublic: boolean;
+  bannerUrl: string | null;
+  profileBackgroundUrl: string | null;
 };
 
 export function EditProfileForm({
+  userId,
   username,
   displayName,
   bio,
   isPublic,
   watchlistPublic,
+  bannerUrl,
+  profileBackgroundUrl,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [usernameVal, setUsernameVal] = useState(username ?? "");
@@ -144,6 +151,14 @@ export function EditProfileForm({
           </label>
         </div>
       </div>
+
+      <ProfileAppearance
+        userId={userId}
+        username={username}
+        bannerUrl={bannerUrl}
+        profileBackgroundUrl={profileBackgroundUrl}
+        embedded
+      />
 
       {error ? (
         <p className="text-xs text-red-300/90" role="alert">

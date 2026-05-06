@@ -1,5 +1,4 @@
 import { AvatarUpload } from "./AvatarUpload";
-import { ProfileAppearance } from "./ProfileAppearance";
 import { EditProfileForm } from "./EditProfileForm";
 import { FavouritesPicker } from "./FavouritesPicker";
 import { FilmsSection } from "./FilmsSection";
@@ -293,15 +292,12 @@ export default async function ProfilePage() {
             ) : null}
           </div>
           <EditProfileForm
+            userId={user.id}
             username={username}
             displayName={displayName}
             bio={bio}
             isPublic={isPublic}
             watchlistPublic={watchlistPublic}
-          />
-          <ProfileAppearance
-            userId={user.id}
-            username={username}
             bannerUrl={bannerUrl}
             profileBackgroundUrl={profileBackgroundUrl}
           />
