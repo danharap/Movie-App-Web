@@ -178,7 +178,7 @@ export async function HomeLanding() {
           Find something to watch
           <br className="hidden sm:block" />
           <span className="bg-gradient-to-r from-indigo-200 via-indigo-300 to-violet-300 bg-clip-text text-transparent">
-            {" "}in under two minutes.
+            {" "}in seconds.
           </span>
         </h1>
 
