@@ -1,5 +1,5 @@
 import { removeWatchlistItem } from "./actions";
-import { posterUrl } from "@/lib/tmdb/constants";
+import { detailHrefFromStoredMovie, posterUrl } from "@/lib/tmdb/constants";
 import { createClient } from "@/lib/supabase/server";
 import Image from "next/image";
 import Link from "next/link";
@@ -14,6 +14,7 @@ type MovieRow = {
   poster_path: string | null;
   vote_average: number | null;
   overview: string | null;
+  vote_count: number | null;
 };
 
 export default async function WatchlistPage() {
@@ -24,7 +25,9 @@ export default async function WatchlistPage() {
 
   const { data: rows } = await supabase
     .from("watchlist")
-    .select("id, created_at, movies ( id, tmdb_id, title, release_year, poster_path, vote_average, overview )")
+    .select(
+      "id, created_at, movies ( id, tmdb_id, title, release_year, poster_path, vote_average, overview, vote_count )",
+    )
     .order("created_at", { ascending: false });
 
   const items =
@@ -59,13 +62,14 @@ export default async function WatchlistPage() {
         <ul className="flex flex-col gap-4">
           {items.map(({ rowId, movie }) => {
             const p = posterUrl(movie.poster_path, "w342");
+            const href = detailHrefFromStoredMovie(movie);
             return (
               <li
                 key={rowId}
                 className="flex gap-4 rounded-2xl border border-white/10 bg-zinc-900/40 p-4"
               >
                 <Link
-                  href={`/movie/${movie.tmdb_id}`}
+                  href={href}
                   className="relative h-28 w-20 shrink-0 overflow-hidden rounded-lg bg-zinc-800"
                 >
                   {p ? (
@@ -80,7 +84,7 @@ export default async function WatchlistPage() {
                 </Link>
                 <div className="min-w-0 flex-1">
                   <Link
-                    href={`/movie/${movie.tmdb_id}`}
+                    href={href}
                     className="font-medium text-white hover:text-indigo-200"
                   >
                     {movie.title}

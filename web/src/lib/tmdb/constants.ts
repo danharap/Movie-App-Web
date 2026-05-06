@@ -22,3 +22,27 @@ export const toTVStoredId = (tmdbId: number) => tmdbId + TV_TMDB_OFFSET;
  */
 export const TV_SEASON_OFFSET = 20_000_000;
 export const toTVSeasonStoredId = (seasonTmdbId: number) => seasonTmdbId + TV_SEASON_OFFSET;
+
+/** Browse/search cards key items by canonical TMDb id; DB rows may use offsets. Seasons are list-only/diary-only. */
+export function browseCanonicalTmdbId(movieTmdbId: number): number | null {
+  const id = Number(movieTmdbId);
+  if (!Number.isFinite(id)) return null;
+  if (id >= TV_SEASON_OFFSET) return null;
+  if (id >= TV_TMDB_OFFSET) return id - TV_TMDB_OFFSET;
+  return id;
+}
+
+/** Detail-page URL from a `movies` row (movies table shared with TV / seasons). */
+export function detailHrefFromStoredMovie(movie: {
+  tmdb_id: number;
+  vote_count?: number | null;
+}): string {
+  const id = Number(movie.tmdb_id);
+  if (!Number.isFinite(id)) return "/browse";
+  if (id >= TV_SEASON_OFFSET) {
+    const parent = movie.vote_count != null ? Number(movie.vote_count) : NaN;
+    return Number.isFinite(parent) ? `/show/${parent}` : "/browse?type=tv";
+  }
+  if (id >= TV_TMDB_OFFSET) return `/show/${id - TV_TMDB_OFFSET}`;
+  return `/movie/${id}`;
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { addToWatchlist, markWatched } from "@/app/actions/library";
+import { addTVToWatchlist, addToWatchlist, markTVWatched, markWatched } from "@/app/actions/library";
 import { posterUrl } from "@/lib/tmdb/constants";
 import Image from "next/image";
 import Link from "next/link";
@@ -135,26 +135,37 @@ export function BrowseSearch({
                         {year} · ★ {m.vote_average?.toFixed(1) ?? "—"}
                       </p>
                     </div>
-                    {!isTV && (
-                      <div className="flex shrink-0 gap-1.5">
-                        <button
-                          type="button"
-                          disabled={isPending}
-                          onClick={() => act(m.id, () => markWatched(m.id), "Added to diary.")}
-                          className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-zinc-300 hover:bg-white/10 disabled:opacity-50"
-                        >
-                          Watched
-                        </button>
-                        <button
-                          type="button"
-                          disabled={isPending}
-                          onClick={() => act(m.id, () => addToWatchlist(m.id), "Added to watchlist.")}
-                          className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-zinc-300 hover:bg-white/10 disabled:opacity-50"
-                        >
-                          + List
-                        </button>
-                      </div>
-                    )}
+                    <div className="flex shrink-0 gap-1.5">
+                      <button
+                        type="button"
+                        disabled={isPending}
+                        onClick={() =>
+                          act(
+                            m.id,
+                            () => (isTV ? markTVWatched(m.id) : markWatched(m.id)),
+                            "Added to diary.",
+                          )
+                        }
+                        className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-zinc-300 hover:bg-white/10 disabled:opacity-50"
+                      >
+                        Watched
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isPending}
+                        onClick={() =>
+                          act(
+                            m.id,
+                            () =>
+                              isTV ? addTVToWatchlist(m.id) : addToWatchlist(m.id),
+                            "Added to watchlist.",
+                          )
+                        }
+                        className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-zinc-300 hover:bg-white/10 disabled:opacity-50"
+                      >
+                        + List
+                      </button>
+                    </div>
                   </li>
                 );
               })}

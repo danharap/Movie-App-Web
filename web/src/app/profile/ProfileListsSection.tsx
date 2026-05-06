@@ -7,7 +7,7 @@ import {
   removeMovieFromList,
   updateProfileList,
 } from "@/app/actions/lists";
-import { posterUrl } from "@/lib/tmdb/constants";
+import { detailHrefFromStoredMovie, posterUrl } from "@/lib/tmdb/constants";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useTransition } from "react";
@@ -22,6 +22,7 @@ type ListMovie = {
     tmdb_id: number;
     title: string;
     poster_path: string | null;
+    vote_count?: number | null;
   };
   position: number;
 };
@@ -368,10 +369,11 @@ function ListDetail({
           <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 lg:grid-cols-8">
             {sorted.map(({ movie }) => {
               const poster = posterUrl(movie.poster_path, "w342");
+              const href = detailHrefFromStoredMovie(movie);
               return (
                 <div key={movie.id} className="group relative">
                   <Link
-                    href={`/movie/${movie.tmdb_id}`}
+                    href={href}
                     title={movie.title}
                     className="relative block aspect-[2/3] overflow-hidden rounded-lg bg-zinc-800"
                   >

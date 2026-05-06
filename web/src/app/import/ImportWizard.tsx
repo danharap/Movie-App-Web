@@ -53,9 +53,6 @@ const STEPS: { key: WizardStep; label: string }[] = [
   { key: "summary", label: "Done" },
 ];
 
-const STEP_ORDER: WizardStep[] = ["welcome", "upload", "preview", "matching", "summary"];
-
-
 export function ImportWizard() {
   const [step, setStep] = useState<WizardStep>("welcome");
   const [parsed, setParsed] = useState<ParsedImport | null>(null);

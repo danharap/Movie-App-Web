@@ -30,6 +30,7 @@ type ListMovieRow = {
   tmdb_id: number;
   title: string;
   poster_path: string | null;
+  vote_count: number | null;
 };
 
 async function loadProfile() {
@@ -90,7 +91,7 @@ async function loadProfile() {
     supabase
       .from("profile_lists")
       .select(
-        "id, name, emoji, description, is_public, position, profile_list_movies ( position, movies ( id, tmdb_id, title, poster_path ) )",
+        "id, name, emoji, description, is_public, position, profile_list_movies ( position, movies ( id, tmdb_id, title, poster_path, vote_count ) )",
       )
       .eq("user_id", user.id)
       .order("position", { ascending: true }),
@@ -345,7 +346,7 @@ export default async function ProfilePage() {
       ) : null}
 
       {/* ── Films (sortable + genre-filterable grid) ── */}
-      <FilmsSection films={watched} total={stats.totalWatched} />
+      <FilmsSection films={watched} />
 
       {/* ── My Lists ── */}
       <ProfileListsSection

@@ -33,10 +33,8 @@ const SORT_LABELS: Record<Sort, string> = {
 
 export function FilmsSection({
   films,
-  total,
 }: {
   films: WatchedFilm[];
-  total: number;
 }) {
   const [sort, setSort] = useState<Sort>("date-desc");
   const [contentType, setContentType] = useState<ContentType>("all");

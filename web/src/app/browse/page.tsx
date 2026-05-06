@@ -10,7 +10,7 @@ import {
   getNowAiringTV,
   type TVShowResult,
 } from "@/lib/tmdb/client";
-import { posterUrl } from "@/lib/tmdb/constants";
+import { browseCanonicalTmdbId, posterUrl } from "@/lib/tmdb/constants";
 import { createClient } from "@/lib/supabase/server";
 import Image from "next/image";
 import Link from "next/link";
@@ -135,14 +135,20 @@ async function loadUserLibrary() {
       (watched ?? []).flatMap((r) => {
         const m = r.movies as { tmdb_id: number } | { tmdb_id: number }[] | null;
         if (!m) return [];
-        return Array.isArray(m) ? m.map((x) => x.tmdb_id) : [m.tmdb_id];
+        const ids = Array.isArray(m) ? m.map((x) => x.tmdb_id) : [m.tmdb_id];
+        return ids
+          .map((dbId) => browseCanonicalTmdbId(dbId))
+          .filter((id): id is number => id != null);
       }),
     );
     const watchlistIds = new Set<number>(
       (watchlist ?? []).flatMap((r) => {
         const m = r.movies as { tmdb_id: number } | { tmdb_id: number }[] | null;
         if (!m) return [];
-        return Array.isArray(m) ? m.map((x) => x.tmdb_id) : [m.tmdb_id];
+        const ids = Array.isArray(m) ? m.map((x) => x.tmdb_id) : [m.tmdb_id];
+        return ids
+          .map((dbId) => browseCanonicalTmdbId(dbId))
+          .filter((id): id is number => id != null);
       }),
     );
     return { watchedIds, watchlistIds, isLoggedIn: true };

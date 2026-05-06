@@ -76,6 +76,7 @@ export async function markWatched(
   void trackServerEvent("movie_watched", { tmdbId, rating: rating ?? null }, user.id);
   revalidatePath("/watched");
   revalidatePath("/watchlist");
+  revalidatePath("/browse");
   revalidatePath("/results");
   revalidatePath("/profile");
 }
@@ -125,6 +126,7 @@ export async function addToWatchlist(tmdbId: number) {
   }
   void trackServerEvent("watchlist_add", { tmdbId }, user.id);
   revalidatePath("/watchlist");
+  revalidatePath("/browse");
 }
 
 export async function removeFromWatchlist(tmdbId: number) {
@@ -147,6 +149,7 @@ export async function removeFromWatchlist(tmdbId: number) {
     .eq("user_id", user.id)
     .eq("movie_id", movie.id);
   revalidatePath("/watchlist");
+  revalidatePath("/browse");
 }
 
 export async function dismissMovie(tmdbId: number, reason?: string | null) {
@@ -290,6 +293,7 @@ export async function markTVWatched(
   }
   void trackServerEvent("tv_watched", { tmdbId, rating: rating ?? null }, user.id);
   revalidatePath("/watched");
+  revalidatePath("/browse");
   revalidatePath("/profile");
 }
 
@@ -311,6 +315,7 @@ export async function addTVToWatchlist(tmdbId: number) {
   }
   void trackServerEvent("tv_watchlist_add", { tmdbId }, user.id);
   revalidatePath("/watchlist");
+  revalidatePath("/browse");
 }
 
 // ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 "use client";
 
-import { addToWatchlist, markWatched } from "@/app/actions/library";
+import { addTVToWatchlist, addToWatchlist, markTVWatched, markWatched } from "@/app/actions/library";
 import { posterUrl } from "@/lib/tmdb/constants";
 import Image from "next/image";
 import Link from "next/link";
@@ -102,7 +102,8 @@ export function BrowseMovieCard({ movie, isWatched, isWatchlisted, isLoggedIn }:
             disabled={isPending}
             onClick={() =>
               run(
-                () => markWatched(movie.id),
+                () =>
+                  isTV ? markTVWatched(movie.id) : markWatched(movie.id),
                 () => setWatched(true),
                 "Added to your diary.",
               )
@@ -120,7 +121,8 @@ export function BrowseMovieCard({ movie, isWatched, isWatchlisted, isLoggedIn }:
             disabled={isPending}
             onClick={() =>
               run(
-                () => addToWatchlist(movie.id),
+                () =>
+                  isTV ? addTVToWatchlist(movie.id) : addToWatchlist(movie.id),
                 () => setWatchlisted(true),
                 "Added to watchlist.",
               )
