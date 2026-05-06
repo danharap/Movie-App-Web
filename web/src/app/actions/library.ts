@@ -28,6 +28,7 @@ async function ensureMovieRow(tmdbId: number): Promise<number> {
     overview: d.overview,
     runtime: d.runtime,
     vote_average: d.vote_average,
+    vote_count: d.vote_count,
     genres: d.genres,
   };
 
@@ -37,7 +38,10 @@ async function ensureMovieRow(tmdbId: number): Promise<number> {
     .select("id")
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.error("[library] ensureMovieRow upsert error:", error.code, error.message);
+    throw new Error("Failed to save movie. Please try again.");
+  }
   return Number(data.id);
 }
 
@@ -63,10 +67,41 @@ export async function markWatched(
     },
     { onConflict: "user_id,movie_id" },
   );
-  if (error) throw error;
+  if (error) {
+    console.error("[library] markWatched error:", error.code, error.message);
+    throw new Error("Failed to save to diary. Please try again.");
+  }
   revalidatePath("/watched");
   revalidatePath("/watchlist");
   revalidatePath("/results");
+  revalidatePath("/profile");
+}
+
+export async function removeFromWatched(tmdbId: number) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const { data: movie } = await supabase
+    .from("movies")
+    .select("id")
+    .eq("tmdb_id", tmdbId)
+    .maybeSingle();
+  if (!movie?.id) return;
+
+  const { error } = await supabase
+    .from("watched_movies")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("movie_id", movie.id);
+  if (error) {
+    console.error("[library] removeFromWatched error:", error.code, error.message);
+    throw new Error("Failed to remove from diary.");
+  }
+  revalidatePath("/watched");
+  revalidatePath("/profile");
 }
 
 export async function addToWatchlist(tmdbId: number) {
@@ -78,13 +113,13 @@ export async function addToWatchlist(tmdbId: number) {
 
   const movieId = await ensureMovieRow(tmdbId);
   const { error } = await supabase.from("watchlist").upsert(
-    {
-      user_id: user.id,
-      movie_id: movieId,
-    },
+    { user_id: user.id, movie_id: movieId },
     { onConflict: "user_id,movie_id" },
   );
-  if (error) throw error;
+  if (error) {
+    console.error("[library] addToWatchlist error:", error.code, error.message);
+    throw new Error("Failed to add to watchlist.");
+  }
   revalidatePath("/watchlist");
 }
 
@@ -119,15 +154,61 @@ export async function dismissMovie(tmdbId: number, reason?: string | null) {
 
   const movieId = await ensureMovieRow(tmdbId);
   const { error } = await supabase.from("dismissed_movies").upsert(
-    {
-      user_id: user.id,
-      movie_id: movieId,
-      reason: reason ?? null,
-    },
+    { user_id: user.id, movie_id: movieId, reason: reason ?? null },
     { onConflict: "user_id,movie_id" },
   );
-  if (error) throw error;
+  if (error) throw new Error("Failed to dismiss movie.");
   revalidatePath("/results");
+}
+
+export async function setFavouriteMovie(tmdbId: number, position: 1 | 2 | 3 | 4) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Sign in to set favourites.");
+
+  const movieId = await ensureMovieRow(tmdbId);
+
+  // Remove any existing favourite at this position first
+  await supabase
+    .from("favourite_movies")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("position", position);
+
+  // Remove this movie from any other position to avoid duplicate constraint
+  await supabase
+    .from("favourite_movies")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("movie_id", movieId);
+
+  const { error } = await supabase.from("favourite_movies").insert({
+    user_id: user.id,
+    movie_id: movieId,
+    position,
+  });
+  if (error) {
+    console.error("[library] setFavourite error:", error.code, error.message);
+    throw new Error("Failed to set favourite.");
+  }
+  revalidatePath("/profile");
+}
+
+export async function removeFavouriteMovie(position: 1 | 2 | 3 | 4) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  await supabase
+    .from("favourite_movies")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("position", position);
+  revalidatePath("/profile");
 }
 
 export async function saveUserPreferences(payload: {

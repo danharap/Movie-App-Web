@@ -100,3 +100,11 @@ export async function searchMovies(query: string, page = "1") {
     include_adult: "false",
   });
 }
+
+export async function getPopularMovies(page = "1") {
+  return tmdbFetch<DiscoverResponse>("/movie/popular", { page });
+}
+
+export async function getTrendingMovies(window: "day" | "week" = "week") {
+  return tmdbFetch<DiscoverResponse>(`/trending/movie/${window}`);
+}

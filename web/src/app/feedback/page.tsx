@@ -9,7 +9,10 @@ const STARS = [1, 2, 3, 4, 5] as const;
 
 function StarDisplay({ rating }: { rating: number }) {
   return (
-    <span className="flex gap-0.5 text-amber-300/90" aria-label={`${rating} out of 5 stars`}>
+    <span
+      className="flex gap-0.5 text-amber-300/90"
+      aria-label={`${rating} out of 5 stars`}
+    >
       {STARS.map((s) => (
         <span key={s} className={s <= rating ? "opacity-100" : "opacity-20"}>
           ★
@@ -28,10 +31,14 @@ function formatDate(iso: string) {
 }
 
 export default async function FeedbackPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user: { id: string } | null = null;
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch (e) {
+    console.error("[feedback] auth error:", e);
+  }
 
   const [reviews, ownReview] = await Promise.all([
     listFeedback(1),
@@ -54,7 +61,10 @@ export default async function FeedbackPage() {
           {!user ? (
             <>
               {" "}
-              <Link href="/login?redirect=/feedback" className="text-amber-200/80 hover:text-amber-100 underline underline-offset-2">
+              <Link
+                href="/login?redirect=/feedback"
+                className="text-amber-200/80 underline underline-offset-2 hover:text-amber-100"
+              >
                 Sign in
               </Link>{" "}
               to leave your own review.
@@ -85,14 +95,13 @@ export default async function FeedbackPage() {
         </div>
       ) : (
         <ul className="space-y-5">
-          {/* Own review pinned at top with the form above; skip re-rendering here */}
           {ownReview ? (
-            <li className="rounded-2xl border border-amber-200/15 bg-zinc-900/40 p-5 space-y-2">
+            <li className="space-y-2 rounded-2xl border border-amber-200/15 bg-zinc-900/40 p-5">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="text-sm font-medium text-white">
                     {ownReview.reviewer_display_name}{" "}
-                    <span className="ml-1.5 rounded-full bg-amber-200/10 border border-amber-200/20 px-2 py-0.5 text-xs text-amber-200/80">
+                    <span className="ml-1.5 rounded-full border border-amber-200/20 bg-amber-200/10 px-2 py-0.5 text-xs text-amber-200/80">
                       You
                     </span>
                   </p>
@@ -104,14 +113,16 @@ export default async function FeedbackPage() {
                 </div>
                 <StarDisplay rating={ownReview.rating} />
               </div>
-              <p className="text-sm leading-relaxed text-zinc-400">{ownReview.body}</p>
+              <p className="text-sm leading-relaxed text-zinc-400">
+                {ownReview.body}
+              </p>
             </li>
           ) : null}
 
           {othersReviews.map((r) => (
             <li
               key={r.id}
-              className="rounded-2xl border border-white/10 bg-zinc-900/40 p-5 space-y-2"
+              className="space-y-2 rounded-2xl border border-white/10 bg-zinc-900/40 p-5"
             >
               <div className="flex items-start justify-between gap-2">
                 <div>

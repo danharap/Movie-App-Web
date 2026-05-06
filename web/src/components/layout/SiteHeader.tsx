@@ -5,10 +5,11 @@ import { createClient } from "@/lib/supabase/server";
 
 const links = [
   { href: "/recommend", label: "Find a film" },
+  { href: "/browse", label: "Browse" },
   { href: "/watchlist", label: "Watchlist" },
   { href: "/watched", label: "Watched" },
   { href: "/feedback", label: "Reviews" },
-  { href: "/profile", label: "Preferences" },
+  { href: "/profile", label: "Profile" },
 ];
 
 export async function SiteHeader() {

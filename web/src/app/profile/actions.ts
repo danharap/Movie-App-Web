@@ -1,6 +1,10 @@
 "use server";
 
-import { saveUserPreferences } from "@/app/actions/library";
+import {
+  saveUserPreferences,
+  setFavouriteMovie,
+  removeFavouriteMovie,
+} from "@/app/actions/library";
 
 export async function saveProfileFromForm(formData: FormData) {
   const minRaw = formData.get("default_runtime_min");
@@ -11,4 +15,15 @@ export async function saveProfileFromForm(formData: FormData) {
     default_runtime_max:
       maxRaw && String(maxRaw).length ? Number(maxRaw) : null,
   });
+}
+
+export async function setFavouriteAction(
+  tmdbId: number,
+  position: 1 | 2 | 3 | 4,
+) {
+  await setFavouriteMovie(tmdbId, position);
+}
+
+export async function removeFavouriteAction(position: 1 | 2 | 3 | 4) {
+  await removeFavouriteMovie(position);
 }

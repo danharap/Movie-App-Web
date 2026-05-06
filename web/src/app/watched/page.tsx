@@ -14,35 +14,48 @@ type MovieRow = {
   release_year: number | null;
   poster_path: string | null;
   vote_average: number | null;
-  vote_count?: number | null;
+  vote_count: number | null;
 };
 
+type WatchedRow = {
+  watched_at: string;
+  user_rating: number | null;
+  notes: string | null;
+  movies: MovieRow | MovieRow[] | null;
+};
+
+async function loadWatched(): Promise<WatchedRow[]> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("watched_movies")
+      .select(
+        "watched_at, user_rating, notes, movies ( id, tmdb_id, title, release_year, poster_path, vote_average, vote_count )",
+      )
+      .order("watched_at", { ascending: false });
+
+    if (error) {
+      console.error("[watched] supabase error:", error.code, error.message);
+      return [];
+    }
+    return (data ?? []) as WatchedRow[];
+  } catch (e) {
+    console.error("[watched] unexpected error loading diary:", e);
+    return [];
+  }
+}
+
 export default async function WatchedPage() {
-  const supabase = await createClient();
+  const rows = await loadWatched();
 
-  const { data: rows } = await supabase
-    .from("watched_movies")
-    .select(
-      "watched_at, user_rating, notes, movies ( id, tmdb_id, title, release_year, poster_path, vote_average, vote_count )",
-    )
-    .order("watched_at", { ascending: false });
-
-  const items =
-    rows?.flatMap((r) => {
-      const m = r.movies as MovieRow | MovieRow[] | null;
-      if (!m) return [];
-      const movie = Array.isArray(m) ? m[0] : m;
-      return movie
-        ? [
-            {
-              watched_at: r.watched_at,
-              user_rating: r.user_rating,
-              notes: r.notes,
-              movie,
-            },
-          ]
-        : [];
-    }) ?? [];
+  const items = rows.flatMap((r) => {
+    const m = r.movies;
+    if (!m) return [];
+    const movie = Array.isArray(m) ? m[0] : m;
+    return movie
+      ? [{ watched_at: r.watched_at, user_rating: r.user_rating, notes: r.notes, movie }]
+      : [];
+  });
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
@@ -99,9 +112,7 @@ export default async function WatchedPage() {
                   </Link>
                   <p className="text-xs text-zinc-500">
                     Watched{" "}
-                    {watched_at
-                      ? new Date(watched_at).toLocaleDateString()
-                      : "—"}
+                    {watched_at ? new Date(watched_at).toLocaleDateString() : "—"}
                   </p>
                   {movie.vote_average != null ? (
                     <p className="text-xs text-zinc-500">
@@ -112,7 +123,7 @@ export default async function WatchedPage() {
                     </p>
                   ) : null}
                   {notes ? (
-                    <p className="mt-1 line-clamp-2 text-xs text-zinc-400 italic">
+                    <p className="mt-1 line-clamp-2 text-xs italic text-zinc-400">
                       &ldquo;{notes}&rdquo;
                     </p>
                   ) : null}
