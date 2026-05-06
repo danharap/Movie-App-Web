@@ -6,6 +6,13 @@ import { requireAdmin, requireRole, requireSuperAdmin, type Role } from "@/lib/a
 import { revalidatePath } from "next/cache";
 
 // ---------------------------------------------------------------------------
+// Helper: regular client for read-only admin queries (relies on super_admin RLS)
+// ---------------------------------------------------------------------------
+async function readerClient() {
+  return createClient();
+}
+
+// ---------------------------------------------------------------------------
 // Role management
 // ---------------------------------------------------------------------------
 
@@ -64,17 +71,16 @@ export async function setUserStatus(
   const { userId: actorId } = await requireAdmin();
   if (targetId === actorId) throw new Error("You cannot change your own status.");
 
-  const admin = createAdminClient();
+  const supabase = await createClient();
 
-  const { error } = await admin
+  const { error } = await supabase
     .from("profiles")
     .update({ status })
     .eq("id", targetId);
 
   if (error) throw new Error("Failed to update status: " + error.message);
 
-  // Log as a role audit entry (status change)
-  await admin.from("role_audit_logs").insert({
+  await supabase.from("role_audit_logs").insert({
     actor_id: actorId,
     target_id: targetId,
     old_role: null,
@@ -120,8 +126,8 @@ export async function deleteUserAccount(targetId: string) {
 
 export async function setAdminNotes(targetId: string, notes: string) {
   await requireAdmin();
-  const admin = createAdminClient();
-  await admin
+  const supabase = await createClient();
+  await supabase
     .from("profiles")
     .update({ admin_notes: notes.trim() || null })
     .eq("id", targetId);
@@ -149,7 +155,7 @@ export async function deleteFeedback(feedbackId: number) {
 
 export async function getDashboardStats() {
   await requireAdmin();
-  const admin = createAdminClient();
+  const supabase = await readerClient();
   const now = new Date();
   const dayAgo = new Date(now.getTime() - 86_400_000).toISOString();
   const weekAgo = new Date(now.getTime() - 7 * 86_400_000).toISOString();
@@ -166,15 +172,15 @@ export async function getDashboardStats() {
     { count: totalFeedback },
     { count: activeThisWeek },
   ] = await Promise.all([
-    admin.from("profiles").select("*", { count: "exact", head: true }),
-    admin.from("profiles").select("*", { count: "exact", head: true }).gte("created_at", dayAgo),
-    admin.from("profiles").select("*", { count: "exact", head: true }).gte("created_at", weekAgo),
-    admin.from("profiles").select("*", { count: "exact", head: true }).gte("created_at", monthAgo),
-    admin.from("watched_movies").select("*", { count: "exact", head: true }),
-    admin.from("watchlist").select("*", { count: "exact", head: true }),
-    admin.from("watched_movies").select("*", { count: "exact", head: true }).not("user_rating", "is", null),
-    admin.from("app_feedback").select("*", { count: "exact", head: true }),
-    admin.from("watched_movies").select("user_id", { count: "exact", head: true }).gte("watched_at", weekAgo),
+    supabase.from("profiles").select("*", { count: "exact", head: true }),
+    supabase.from("profiles").select("*", { count: "exact", head: true }).gte("created_at", dayAgo),
+    supabase.from("profiles").select("*", { count: "exact", head: true }).gte("created_at", weekAgo),
+    supabase.from("profiles").select("*", { count: "exact", head: true }).gte("created_at", monthAgo),
+    supabase.from("watched_movies").select("*", { count: "exact", head: true }),
+    supabase.from("watchlist").select("*", { count: "exact", head: true }),
+    supabase.from("watched_movies").select("*", { count: "exact", head: true }).not("user_rating", "is", null),
+    supabase.from("app_feedback").select("*", { count: "exact", head: true }),
+    supabase.from("watched_movies").select("user_id", { count: "exact", head: true }).gte("watched_at", weekAgo),
   ]);
 
   return {
@@ -192,8 +198,8 @@ export async function getDashboardStats() {
 
 export async function getRecentSignups(limit = 8) {
   await requireAdmin();
-  const admin = createAdminClient();
-  const { data } = await admin
+  const supabase = await readerClient();
+  const { data } = await supabase
     .from("profiles")
     .select("id, display_name, username, email, role, status, created_at, avatar_url")
     .order("created_at", { ascending: false })
@@ -203,8 +209,8 @@ export async function getRecentSignups(limit = 8) {
 
 export async function getRecentActivity(limit = 10) {
   await requireAdmin();
-  const admin = createAdminClient();
-  const { data } = await admin
+  const supabase = await readerClient();
+  const { data } = await supabase
     .from("analytics_events")
     .select("id, event_name, user_id, properties, created_at")
     .order("created_at", { ascending: false })
@@ -214,10 +220,10 @@ export async function getRecentActivity(limit = 10) {
 
 export async function getUserGrowthChart(days = 30) {
   await requireAdmin();
-  const admin = createAdminClient();
+  const supabase = await readerClient();
   const since = new Date(Date.now() - days * 86_400_000).toISOString();
 
-  const { data } = await admin
+  const { data } = await supabase
     .from("profiles")
     .select("created_at")
     .gte("created_at", since)
@@ -242,10 +248,10 @@ export async function getUserGrowthChart(days = 30) {
 
 export async function getEventChart(days = 14) {
   await requireAdmin();
-  const admin = createAdminClient();
+  const supabase = await readerClient();
   const since = new Date(Date.now() - days * 86_400_000).toISOString();
 
-  const { data } = await admin
+  const { data } = await supabase
     .from("analytics_events")
     .select("event_name, created_at")
     .gte("created_at", since);
@@ -287,9 +293,9 @@ export async function getAllUsers(opts?: {
   offset?: number;
 }) {
   await requireAdmin();
-  const admin = createAdminClient();
+  const supabase = await readerClient();
 
-  let q = admin
+  let q = supabase
     .from("profiles")
     .select(
       "id, display_name, username, email, role, status, admin_notes, created_at, last_active_at, avatar_url",
@@ -312,7 +318,7 @@ export async function getAllUsers(opts?: {
 
 export async function getUserDetail(userId: string) {
   const { role: actorRole } = await requireAdmin();
-  const admin = createAdminClient();
+  const supabase = await readerClient();
 
   const [
     { data: profile },
@@ -320,14 +326,14 @@ export async function getUserDetail(userId: string) {
     { count: watchlistCount },
     { count: ratingsCount },
   ] = await Promise.all([
-    admin
+    supabase
       .from("profiles")
       .select("id, display_name, username, email, role, status, admin_notes, created_at, last_active_at, avatar_url")
       .eq("id", userId)
       .maybeSingle(),
-    admin.from("watched_movies").select("*", { count: "exact", head: true }).eq("user_id", userId),
-    admin.from("watchlist").select("*", { count: "exact", head: true }).eq("user_id", userId),
-    admin.from("watched_movies").select("*", { count: "exact", head: true }).eq("user_id", userId).not("user_rating", "is", null),
+    supabase.from("watched_movies").select("*", { count: "exact", head: true }).eq("user_id", userId),
+    supabase.from("watchlist").select("*", { count: "exact", head: true }).eq("user_id", userId),
+    supabase.from("watched_movies").select("*", { count: "exact", head: true }).eq("user_id", userId).not("user_rating", "is", null),
   ]);
 
   return {
@@ -341,9 +347,9 @@ export async function getUserDetail(userId: string) {
 
 export async function getAuditLogs(limit = 50) {
   await requireAdmin();
-  const admin = createAdminClient();
+  const supabase = await readerClient();
 
-  const { data } = await admin
+  const { data } = await supabase
     .from("role_audit_logs")
     .select("id, actor_id, target_id, old_role, new_role, notes, created_at")
     .order("created_at", { ascending: false })
@@ -354,8 +360,8 @@ export async function getAuditLogs(limit = 50) {
 
 export async function getAllFeedback() {
   await requireAdmin();
-  const admin = createAdminClient();
-  const { data } = await admin
+  const supabase = await readerClient();
+  const { data } = await supabase
     .from("app_feedback")
     .select("id, user_id, rating, body, created_at, profiles(display_name, username, email)")
     .order("created_at", { ascending: false });
