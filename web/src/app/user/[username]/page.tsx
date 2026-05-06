@@ -176,22 +176,28 @@ export default async function PublicProfilePage({
         </>
       ) : null}
 
-      <div className="relative z-10 mx-auto max-w-4xl px-4 py-12 sm:px-6">
-
+      <div className="relative z-10 mx-auto w-full max-w-4xl">
       {bannerUrl ? (
-        <div className="relative mb-8 h-36 w-full overflow-hidden rounded-2xl border border-white/[0.08] bg-zinc-900 shadow-lg shadow-black/40 sm:h-44">
+        <div className="relative mb-5 aspect-[21/9] min-h-[min(42vw,11.5rem)] w-full overflow-hidden bg-zinc-900 sm:mx-6 sm:mb-8 sm:mt-12 sm:aspect-auto sm:h-44 sm:min-h-0 sm:rounded-2xl sm:border sm:border-white/[0.08] sm:shadow-lg sm:shadow-black/40">
           <Image
             src={bannerUrl}
             alt=""
             fill
-            className="object-cover"
+            className="object-cover object-center"
             priority
-            sizes="(max-width:896px) 100vw, 896px"
+            sizes="100vw"
             unoptimized
           />
         </div>
       ) : null}
 
+      <div
+        className={
+          bannerUrl
+            ? "px-4 pb-12 pt-6 sm:px-6 sm:pt-0"
+            : "px-4 py-12 sm:px-6"
+        }
+      >
       {/* ── Header ── */}
       <div className="mb-10 flex flex-col items-center gap-6 sm:flex-row sm:items-start">
         <Avatar url={target.avatar_url} name={displayName} size={80} />
@@ -413,6 +419,7 @@ export default async function PublicProfilePage({
           </div>
         </section>
       ) : null}
+      </div>
       </div>
     </div>
   );
