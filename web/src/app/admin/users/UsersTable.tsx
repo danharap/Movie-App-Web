@@ -25,7 +25,7 @@ const STATUS_OPTIONS = ["active", "suspended", "banned"] as const;
 
 const ROLE_COLORS: Record<string, string> = {
   super_admin: "bg-purple-900/40 text-purple-300",
-  admin: "bg-amber-900/40 text-amber-300",
+  admin: "bg-indigo-900/40 text-indigo-300",
   moderator: "bg-blue-900/40 text-blue-300",
   user: "bg-zinc-800 text-zinc-400",
 };
@@ -99,12 +99,12 @@ function UserRow({
   return (
     <>
       <tr
-        className={`cursor-pointer border-b border-white/5 transition hover:bg-white/2 ${isSelected ? "bg-amber-300/5" : ""} ${isPending ? "opacity-60" : ""}`}
+        className={`cursor-pointer border-b border-white/5 transition hover:bg-white/[0.02] ${isSelected ? "bg-indigo-400/5" : ""} ${isPending ? "opacity-60" : ""}`}
         onClick={onSelect}
       >
         <td className="px-4 py-3">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-[11px] font-bold text-amber-200">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-[11px] font-bold text-indigo-300">
               {((user.display_name ?? user.email) ?? "?").slice(0, 1).toUpperCase()}
             </div>
             <div>
@@ -180,11 +180,11 @@ function UserRow({
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       rows={2}
-                      className="flex-1 resize-none rounded-xl border border-white/10 bg-zinc-800 px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-amber-400/40"
+                      className="flex-1 resize-none rounded-xl border border-white/10 bg-zinc-800 px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-indigo-400/30"
                       placeholder="Internal notes (not visible to user)…"
                     />
                     <div className="flex flex-col gap-1.5">
-                      <button onClick={handleSaveNotes} className="rounded-full bg-amber-300 px-3 py-1 text-[10px] font-semibold text-black">Save</button>
+                      <button onClick={handleSaveNotes} className="rounded-full bg-indigo-500 px-3 py-1 text-[10px] font-semibold text-white hover:bg-indigo-400">Save</button>
                       <button onClick={() => { setEditingNotes(false); setNotes(user.admin_notes ?? ""); }} className="rounded-full border border-white/10 px-3 py-1 text-[10px] text-zinc-400">Cancel</button>
                     </div>
                   </div>
@@ -263,7 +263,7 @@ export function UsersTable({
           value={filter.search}
           onChange={(e) => dispatch(setUserFilter({ search: e.target.value }))}
           placeholder="Search name, username, email…"
-          className="w-64 rounded-xl border border-white/10 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-amber-400/40"
+          className="w-64 rounded-xl border border-white/10 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-indigo-400/30"
         />
         <select
           value={filter.role}

@@ -24,7 +24,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </p>
           <Link
             href="/"
-            className="mt-6 inline-block rounded-full bg-amber-300 px-6 py-2 text-sm font-semibold text-black hover:bg-amber-200"
+            className="mt-6 inline-block rounded-full bg-indigo-500 px-6 py-2 text-sm font-semibold text-white hover:bg-indigo-400"
           >
             Back to app
           </Link>
@@ -39,7 +39,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         {/* Sidebar */}
         <aside className="hidden w-56 shrink-0 flex-col border-r border-white/8 bg-zinc-900/60 lg:flex">
           <div className="flex h-14 items-center gap-2 border-b border-white/8 px-4">
-            <span className="text-sm font-bold text-amber-200">{APP_NAME}</span>
+            <span className="text-sm font-bold text-indigo-300">{APP_NAME}</span>
             <span className="ml-auto rounded-full bg-red-900/50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-red-300">
               Admin
             </span>
@@ -61,7 +61,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <div className="flex flex-1 flex-col overflow-hidden">
           {/* Mobile top bar */}
           <div className="flex h-14 items-center justify-between border-b border-white/8 bg-zinc-900/60 px-4 lg:hidden">
-            <span className="text-sm font-bold text-amber-200">{APP_NAME} Admin</span>
+            <span className="text-sm font-bold text-indigo-300">{APP_NAME} Admin</span>
             <Link href="/" className="text-xs text-zinc-500 hover:text-zinc-300">
               ← App
             </Link>

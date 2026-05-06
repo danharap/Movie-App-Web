@@ -20,8 +20,8 @@ function StatCard({
     <div
       className={`rounded-2xl border p-5 ${
         accent
-          ? "border-amber-300/20 bg-amber-300/5"
-          : "border-white/8 bg-zinc-900/50"
+          ? "border-indigo-400/20 bg-indigo-400/5"
+          : "border-white/[0.06] bg-zinc-900/50"
       }`}
     >
       <p className="text-2xl font-bold text-white">{value}</p>
@@ -83,7 +83,7 @@ export default async function AdminOverviewPage() {
         <section>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-white">Recent Signups</h2>
-            <Link href="/admin/users" className="text-xs text-amber-200/70 hover:text-amber-100">
+            <Link href="/admin/users" className="text-xs text-indigo-300/70 hover:text-indigo-200">
               View all →
             </Link>
           </div>
@@ -93,7 +93,7 @@ export default async function AdminOverviewPage() {
             ) : (
               recentSignups.map((u) => (
                 <div key={u.id} className="flex items-center gap-3 px-4 py-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-xs font-bold text-amber-200">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-xs font-bold text-indigo-300">
                     {((u.display_name as string | null) ?? (u.email as string | null) ?? "?")
                       .slice(0, 1)
                       .toUpperCase()}
@@ -116,7 +116,7 @@ export default async function AdminOverviewPage() {
                       u.role === "super_admin"
                         ? "bg-purple-900/40 text-purple-300"
                         : u.role === "admin"
-                          ? "bg-amber-900/40 text-amber-300"
+                          ? "bg-indigo-900/40 text-indigo-300"
                           : u.role === "moderator"
                             ? "bg-blue-900/40 text-blue-300"
                             : "bg-zinc-800 text-zinc-500"
@@ -134,7 +134,7 @@ export default async function AdminOverviewPage() {
         <section>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-white">Recent Activity</h2>
-            <Link href="/admin/analytics" className="text-xs text-amber-200/70 hover:text-amber-100">
+            <Link href="/admin/analytics" className="text-xs text-indigo-300/70 hover:text-indigo-200">
               Analytics →
             </Link>
           </div>

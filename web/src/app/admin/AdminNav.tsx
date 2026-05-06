@@ -23,8 +23,8 @@ export function AdminNav() {
             href={href}
             className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition ${
               active
-                ? "bg-amber-300/15 text-amber-200"
-                : "text-zinc-400 hover:bg-white/5 hover:text-zinc-200"
+                ? "bg-indigo-500/15 text-indigo-300"
+                : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200"
             }`}
           >
             <span className="text-base">{icon}</span>

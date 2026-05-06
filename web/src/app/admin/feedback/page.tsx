@@ -20,7 +20,7 @@ export default async function AdminFeedbackPage() {
           <h1 className="text-2xl font-bold text-white">App Feedback</h1>
           <p className="mt-1 text-sm text-zinc-500">
             {feedback.length} review{feedback.length !== 1 ? "s" : ""}
-            {avg && <span className="ml-2 text-amber-200">{avg}/10 avg</span>}
+            {avg && <span className="ml-2 text-indigo-300">{avg}/10 avg</span>}
           </p>
         </div>
       </div>
@@ -52,7 +52,7 @@ export default async function AdminFeedbackPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold text-amber-200">
+                    <span className="text-sm font-bold text-indigo-300">
                       {f.rating as number}/10
                     </span>
                     <DeleteFeedbackButton id={f.id as number} />

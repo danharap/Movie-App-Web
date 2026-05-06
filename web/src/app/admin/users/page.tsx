@@ -19,7 +19,7 @@ export default async function AdminUsersPage() {
         <p className="mt-1 text-sm text-zinc-500">
           Search, filter, and manage all user accounts.
           {!canChangeRole && (
-            <span className="ml-2 text-amber-200/60">
+            <span className="ml-2 text-indigo-300/60">
               Role changes require super_admin.
             </span>
           )}
