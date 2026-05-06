@@ -1,10 +1,19 @@
-import { searchMovies } from "@/lib/tmdb/client";
+import { searchMovies, searchTV } from "@/lib/tmdb/client";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
 const MAX_RESULTS = 15;
+
+type Hit = {
+  id: number;
+  title: string;
+  release_date: string;
+  poster_path: string | null;
+  vote_average: number;
+  mediaType: "movie" | "tv";
+};
 
 export async function GET(request: Request) {
   const supabase = await createClient();
@@ -18,20 +27,66 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const raw = searchParams.get("q") ?? "";
   const q = raw.trim();
-  if (q.length < 2) {
-    return NextResponse.json({ results: [], total_results: 0 });
-  }
-  if (q.length > 120) {
-    return NextResponse.json({ error: "Query too long" }, { status: 400 });
-  }
+  const type = searchParams.get("type") ?? "all"; // "movies" | "tv" | "all"
+
+  if (q.length < 2) return NextResponse.json({ results: [], total_results: 0 });
+  if (q.length > 120) return NextResponse.json({ error: "Query too long" }, { status: 400 });
 
   try {
-    const data = await searchMovies(q, "1");
-    const results = (data.results ?? []).slice(0, MAX_RESULTS);
-    return NextResponse.json({
-      results,
-      total_results: data.total_results ?? results.length,
-    });
+    let results: Hit[] = [];
+
+    if (type === "movies") {
+      const data = await searchMovies(q, "1");
+      results = (data.results ?? []).slice(0, MAX_RESULTS).map((m) => ({
+        id: m.id,
+        title: m.title,
+        release_date: m.release_date,
+        poster_path: m.poster_path,
+        vote_average: m.vote_average,
+        mediaType: "movie",
+      }));
+    } else if (type === "tv") {
+      const data = await searchTV(q, "1");
+      results = (data.results ?? []).slice(0, MAX_RESULTS).map((m) => ({
+        id: m.id,
+        title: m.name,
+        release_date: m.first_air_date,
+        poster_path: m.poster_path,
+        vote_average: m.vote_average,
+        mediaType: "tv",
+      }));
+    } else {
+      // "all" — run both in parallel, interleave results
+      const [movies, shows] = await Promise.all([
+        searchMovies(q, "1"),
+        searchTV(q, "1"),
+      ]);
+      const movieHits: Hit[] = (movies.results ?? []).slice(0, 8).map((m) => ({
+        id: m.id,
+        title: m.title,
+        release_date: m.release_date,
+        poster_path: m.poster_path,
+        vote_average: m.vote_average,
+        mediaType: "movie",
+      }));
+      const tvHits: Hit[] = (shows.results ?? []).slice(0, 7).map((m) => ({
+        id: m.id,
+        title: m.name,
+        release_date: m.first_air_date,
+        poster_path: m.poster_path,
+        vote_average: m.vote_average,
+        mediaType: "tv",
+      }));
+      // Interleave movies and TV for relevance mix
+      const len = Math.max(movieHits.length, tvHits.length);
+      for (let i = 0; i < len; i++) {
+        if (movieHits[i]) results.push(movieHits[i]);
+        if (tvHits[i]) results.push(tvHits[i]);
+      }
+      results = results.slice(0, MAX_RESULTS);
+    }
+
+    return NextResponse.json({ results, total_results: results.length });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Search failed";
     const status = message.includes("TMDB_") ? 503 : 500;

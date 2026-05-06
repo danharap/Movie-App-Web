@@ -130,3 +130,86 @@ export type NowPlayingResponse = {
 export async function getNowPlayingMovies(page = "1") {
   return tmdbFetch<NowPlayingResponse>("/movie/now_playing", { page });
 }
+
+// ---------------------------------------------------------------------------
+// TV Shows
+// ---------------------------------------------------------------------------
+
+export type TVShowResult = {
+  id: number;
+  name: string;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  first_air_date: string;
+  vote_average: number;
+  vote_count: number;
+  popularity: number;
+  genre_ids: number[];
+};
+
+export type TVListResponse = {
+  page: number;
+  results: TVShowResult[];
+  total_pages: number;
+};
+
+export type TVDetailsResponse = {
+  id: number;
+  name: string;
+  tagline: string | null;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  first_air_date: string;
+  vote_average: number;
+  vote_count: number;
+  number_of_seasons: number;
+  number_of_episodes: number;
+  episode_run_time: number[];
+  status: string;
+  genres: { id: number; name: string }[];
+  networks: { id: number; name: string; logo_path: string | null }[];
+  seasons: {
+    id: number;
+    name: string;
+    season_number: number;
+    episode_count: number;
+    poster_path: string | null;
+    air_date: string | null;
+    overview: string;
+  }[];
+};
+
+export async function getPopularTV(page = "1") {
+  return tmdbFetch<TVListResponse>("/tv/popular", { page });
+}
+
+export async function getTrendingTV(window: "day" | "week" = "week") {
+  return tmdbFetch<TVListResponse>(`/trending/tv/${window}`);
+}
+
+export async function getNowAiringTV(page = "1") {
+  return tmdbFetch<TVListResponse>("/tv/on_the_air", { page });
+}
+
+export async function getTVDetails(tmdbId: number) {
+  return tmdbFetch<TVDetailsResponse>(`/tv/${tmdbId}`);
+}
+
+export type TVSearchResult = {
+  id: number;
+  name: string;
+  first_air_date: string;
+  poster_path: string | null;
+  vote_average: number;
+};
+
+export async function searchTV(query: string, page = "1") {
+  const q = query.trim();
+  if (!q) return { page: 1, results: [] as TVSearchResult[], total_results: 0 };
+  return tmdbFetch<{ page: number; results: TVSearchResult[]; total_results: number }>(
+    "/search/tv",
+    { query: q, page, include_adult: "false" },
+  );
+}

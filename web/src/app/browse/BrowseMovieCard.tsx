@@ -16,6 +16,7 @@ export type BrowseMovie = {
   vote_count: number;
   overview: string;
   genre_ids: number[];
+  mediaType?: "movie" | "tv";
 };
 
 type Props = {
@@ -32,6 +33,8 @@ export function BrowseMovieCard({ movie, isWatched, isWatchlisted, isLoggedIn }:
 
   const year = movie.release_date?.slice(0, 4) ?? "—";
   const poster = posterUrl(movie.poster_path, "w342");
+  const href = movie.mediaType === "tv" ? `/show/${movie.id}` : `/movie/${movie.id}`;
+  const isTV = movie.mediaType === "tv";
 
   function run(action: () => Promise<void>, onSuccess: () => void, msg: string) {
     if (!isLoggedIn) {
@@ -52,7 +55,7 @@ export function BrowseMovieCard({ movie, isWatched, isWatchlisted, isLoggedIn }:
   return (
     <article className="group flex flex-col overflow-hidden rounded-2xl border border-white/[0.07] bg-zinc-900/60 shadow-lg shadow-black/30 transition-all duration-300 hover:border-indigo-400/20 hover:-translate-y-0.5 hover:shadow-indigo-950/20">
       <Link
-        href={`/movie/${movie.id}`}
+        href={href}
         className="relative aspect-[2/3] w-full overflow-hidden bg-zinc-800"
       >
         {poster ? (
@@ -74,12 +77,18 @@ export function BrowseMovieCard({ movie, isWatched, isWatchlisted, isLoggedIn }:
             ★ {movie.vote_average.toFixed(1)}
           </div>
         )}
+        {/* TV badge */}
+        {isTV && (
+          <div className="absolute right-2 top-2 rounded-md bg-violet-600/80 px-1.5 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
+            TV
+          </div>
+        )}
       </Link>
 
       <div className="flex flex-1 flex-col gap-2 p-3">
         <div>
           <Link
-            href={`/movie/${movie.id}`}
+            href={href}
             className="line-clamp-2 text-sm font-medium text-white transition hover:text-indigo-200"
           >
             {movie.title}
