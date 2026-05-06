@@ -59,20 +59,20 @@ export function MobileMenu({ user, avatarUrl, displayName, isAdmin, publicLinks,
       {/* Backdrop */}
       {open && (
         <div
-          className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
           style={{ animation: "fadeInBackdrop 0.2s ease forwards" }}
           onClick={() => setOpen(false)}
           aria-hidden
         />
       )}
 
-      {/* Drawer */}
+      {/* Drawer — fully opaque so content behind doesn't bleed through */}
       <div
         id="mobile-drawer"
         role="dialog"
         aria-modal="true"
         aria-label="Navigation menu"
-        className={`fixed inset-y-0 right-0 z-50 flex w-72 flex-col border-l border-white/[0.08] bg-zinc-950/98 shadow-2xl shadow-black/60 backdrop-blur-xl transition-transform duration-300 ease-out md:hidden ${
+        className={`fixed inset-y-0 right-0 z-50 flex w-[min(80vw,300px)] flex-col border-l border-white/[0.08] bg-[#09090b] shadow-2xl shadow-black/80 transition-transform duration-300 ease-out md:hidden ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -98,17 +98,17 @@ export function MobileMenu({ user, avatarUrl, displayName, isAdmin, publicLinks,
         </div>
 
         {/* Nav links */}
-        <nav className="flex flex-1 flex-col overflow-y-auto p-3">
+        <nav className="flex flex-1 flex-col overflow-y-auto px-3 py-2">
           <div className="space-y-0.5">
             {allLinks.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
                 onClick={() => setOpen(false)}
-                className={`flex items-center rounded-xl px-4 py-3 text-sm font-medium transition ${
+                className={`flex items-center rounded-xl px-4 py-3.5 text-[15px] font-medium transition ${
                   pathname === l.href
-                    ? "bg-indigo-500/10 text-indigo-300"
-                    : "text-zinc-300 hover:bg-white/[0.04] hover:text-white"
+                    ? "bg-indigo-500/15 text-indigo-300"
+                    : "text-zinc-200 hover:bg-white/[0.06] hover:text-white"
                 }`}
               >
                 {l.label}
@@ -118,11 +118,11 @@ export function MobileMenu({ user, avatarUrl, displayName, isAdmin, publicLinks,
 
           {isAdmin && (
             <>
-              <div className="my-3 h-px bg-white/[0.06]" />
+              <div className="my-3 h-px bg-white/[0.08]" />
               <Link
                 href="/admin"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-2 rounded-xl bg-indigo-500/10 px-4 py-3 text-sm font-medium text-indigo-300 transition hover:bg-indigo-500/20"
+                className="flex items-center gap-2.5 rounded-xl bg-indigo-500/10 px-4 py-3.5 text-[15px] font-medium text-indigo-300 transition hover:bg-indigo-500/20"
               >
                 <span className="flex h-5 w-5 items-center justify-center rounded-md bg-indigo-500/20 text-[10px]">⚡</span>
                 Admin

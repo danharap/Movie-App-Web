@@ -1,5 +1,7 @@
+import { ShowActions } from "./ShowActions";
 import { getTVDetails } from "@/lib/tmdb/client";
-import { posterUrl } from "@/lib/tmdb/constants";
+import { posterUrl, toTVStoredId } from "@/lib/tmdb/constants";
+import { createClient } from "@/lib/supabase/server";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -18,6 +20,34 @@ export default async function ShowDetailPage({ params }: Props) {
     show = await getTVDetails(tmdbId);
   } catch {
     notFound();
+  }
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Load existing diary entry using the TV-offset stored ID
+  let existing: { user_rating: number | null; notes: string | null } | null = null;
+  if (user) {
+    const storedId = toTVStoredId(tmdbId);
+    const { data: movieRow } = await supabase
+      .from("movies")
+      .select("id")
+      .eq("tmdb_id", storedId)
+      .maybeSingle();
+    if (movieRow?.id) {
+      const { data: entry } = await supabase
+        .from("watched_movies")
+        .select("user_rating, notes")
+        .eq("user_id", user.id)
+        .eq("movie_id", movieRow.id)
+        .maybeSingle();
+      if (entry) {
+        existing = {
+          user_rating: entry.user_rating as number | null,
+          notes: entry.notes as string | null,
+        };
+      }
+    }
   }
 
   const backdrop = posterUrl(show.backdrop_path, "original");
@@ -168,6 +198,18 @@ export default async function ShowDetailPage({ params }: Props) {
               })}
             </div>
           </section>
+        )}
+
+        {/* Log / Rate */}
+        <ShowActions tmdbId={tmdbId} isLoggedIn={!!user} existing={existing} />
+
+        {!user && (
+          <p className="mt-4 text-center text-xs text-zinc-600 md:text-left">
+            <Link href={`/login?redirect=/show/${tmdbId}`} className="text-zinc-500 underline-offset-2 hover:underline">
+              Sign in
+            </Link>{" "}
+            to log this show, rate it, and add it to your watchlist.
+          </p>
         )}
 
         {/* Browse back */}

@@ -24,7 +24,9 @@ export type AnalyticsEvent =
   | "follow_user"
   | "friend_request_sent"
   | "list_created"
-  | "list_movie_added";
+  | "list_movie_added"
+  | "tv_watched"
+  | "tv_watchlist_add";
 
 export async function trackServerEvent(
   event: AnalyticsEvent,

@@ -1,8 +1,9 @@
 "use server";
 
-import { getMovieDetails } from "@/lib/tmdb/client";
+import { getMovieDetails, getTVDetails } from "@/lib/tmdb/client";
 import { createClient } from "@/lib/supabase/server";
 import { trackServerEvent } from "@/lib/analytics/track";
+import { TV_TMDB_OFFSET, toTVStoredId } from "@/lib/tmdb/constants";
 import { revalidatePath } from "next/cache";
 
 async function ensureMovieRow(tmdbId: number): Promise<number> {
@@ -212,6 +213,104 @@ export async function removeFavouriteMovie(position: 1 | 2 | 3 | 4) {
     .eq("user_id", user.id)
     .eq("position", position);
   revalidatePath("/profile");
+}
+
+// ---------------------------------------------------------------------------
+// TV Show actions — stored with TV_TMDB_OFFSET to avoid movie ID collisions
+// ---------------------------------------------------------------------------
+
+async function ensureTVRow(tmdbId: number): Promise<number> {
+  const storedId = toTVStoredId(tmdbId);
+  const supabase = await createClient();
+
+  const { data: existing } = await supabase
+    .from("movies")
+    .select("id")
+    .eq("tmdb_id", storedId)
+    .maybeSingle();
+  if (existing?.id) return Number(existing.id);
+
+  const show = await getTVDetails(tmdbId);
+  const year =
+    show.first_air_date && show.first_air_date.length >= 4
+      ? Number(show.first_air_date.slice(0, 4))
+      : null;
+
+  const row = {
+    tmdb_id: storedId,
+    title: show.name,
+    release_year: Number.isFinite(year) ? year : null,
+    poster_path: show.poster_path,
+    backdrop_path: show.backdrop_path,
+    overview: show.overview,
+    runtime: show.episode_run_time?.[0] ?? null,
+    vote_average: show.vote_average,
+    vote_count: show.vote_count,
+    genres: show.genres,
+  };
+
+  const { data, error } = await supabase
+    .from("movies")
+    .upsert(row, { onConflict: "tmdb_id" })
+    .select("id")
+    .single();
+
+  if (error) {
+    console.error("[library] ensureTVRow upsert error:", error.code, error.message);
+    throw new Error("Failed to save show. Please try again.");
+  }
+  return Number(data.id);
+}
+
+export async function markTVWatched(
+  tmdbId: number,
+  rating?: number | null,
+  notes?: string | null,
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Sign in to save your watch history.");
+
+  const movieId = await ensureTVRow(tmdbId);
+  const { error } = await supabase.from("watched_movies").upsert(
+    {
+      user_id: user.id,
+      movie_id: movieId,
+      user_rating: rating ?? null,
+      notes: notes ?? null,
+      watched_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id,movie_id" },
+  );
+  if (error) {
+    console.error("[library] markTVWatched error:", error.code, error.message);
+    throw new Error("Failed to save to diary. Please try again.");
+  }
+  void trackServerEvent("tv_watched", { tmdbId, rating: rating ?? null }, user.id);
+  revalidatePath("/watched");
+  revalidatePath("/profile");
+}
+
+export async function addTVToWatchlist(tmdbId: number) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Sign in to use your watchlist.");
+
+  const movieId = await ensureTVRow(tmdbId);
+  const { error } = await supabase.from("watchlist").upsert(
+    { user_id: user.id, movie_id: movieId },
+    { onConflict: "user_id,movie_id" },
+  );
+  if (error) {
+    console.error("[library] addTVToWatchlist error:", error.code, error.message);
+    throw new Error("Failed to add to watchlist.");
+  }
+  void trackServerEvent("tv_watchlist_add", { tmdbId }, user.id);
+  revalidatePath("/watchlist");
 }
 
 export async function saveUserPreferences(payload: {
