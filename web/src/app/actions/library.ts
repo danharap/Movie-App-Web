@@ -324,6 +324,7 @@ async function ensureTVSeasonRow(
   posterPath: string | null,
   airDate: string | null,
   episodeRunTime: number | null,
+  showTmdbId: number | null,
 ): Promise<number> {
   const storedId = toTVSeasonStoredId(seasonTmdbId);
   const supabase = await createClient();
@@ -337,6 +338,8 @@ async function ensureTVSeasonRow(
 
   const year = airDate && airDate.length >= 4 ? Number(airDate.slice(0, 4)) : null;
 
+  // vote_count stores the parent show's original TMDb ID so the profile can
+  // generate a correct /show/[id] link without a separate lookup.
   const row = {
     tmdb_id: storedId,
     title: `${showName} — ${seasonName}`,
@@ -346,7 +349,7 @@ async function ensureTVSeasonRow(
     overview: null,
     runtime: episodeRunTime,
     vote_average: null,
-    vote_count: null,
+    vote_count: showTmdbId ?? null,
     genres: [],
   };
 
@@ -372,12 +375,13 @@ export async function markTVSeasonWatched(
   episodeRunTime: number | null,
   rating?: number | null,
   notes?: string | null,
+  showTmdbId?: number | null,
 ) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Sign in to save your watch history.");
 
-  const movieId = await ensureTVSeasonRow(seasonTmdbId, showName, seasonName, posterPath, airDate, episodeRunTime);
+  const movieId = await ensureTVSeasonRow(seasonTmdbId, showName, seasonName, posterPath, airDate, episodeRunTime, showTmdbId ?? null);
   const { error } = await supabase.from("watched_movies").upsert(
     {
       user_id: user.id,

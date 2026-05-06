@@ -9,6 +9,7 @@ type ExistingEntry = { user_rating: number | null; notes: string | null } | null
 
 type Props = {
   seasonTmdbId: number;
+  showTmdbId: number;
   showName: string;
   seasonName: string;
   posterPath: string | null;
@@ -22,6 +23,7 @@ const RATING_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
 
 export function SeasonRater({
   seasonTmdbId,
+  showTmdbId,
   showName,
   seasonName,
   posterPath,
@@ -52,6 +54,7 @@ export function SeasonRater({
           episodeRunTime,
           rating > 0 ? rating : null,
           notes.trim() || null,
+          showTmdbId,
         );
         toast.success(existing ? "Season log updated." : `${seasonName} logged to your diary.`);
         setOpen(false);

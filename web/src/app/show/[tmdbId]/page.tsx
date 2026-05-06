@@ -226,6 +226,7 @@ export default async function ShowDetailPage({ params }: Props) {
                     </div>
                     <SeasonRater
                       seasonTmdbId={season.id}
+                      showTmdbId={tmdbId}
                       showName={show.name}
                       seasonName={season.name}
                       posterPath={season.poster_path}

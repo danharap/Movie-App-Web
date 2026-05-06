@@ -13,6 +13,7 @@ export type WatchedFilm = {
     tmdb_id: number;
     title: string;
     poster_path: string | null;
+    vote_count: number | null;
     genres: Genre[] | null;
   };
   watched_at: string | null;
@@ -54,13 +55,15 @@ export function FilmsSection({
   }, [films]);
 
   const sorted = useMemo(() => {
-    // Always exclude TV seasons (they're sub-items of shows, no standalone page)
-    let list = films.filter((f) => f.movie.tmdb_id < TV_SEASON_OFFSET);
-    // Content type filter
+    // Content type filter — seasons (>= TV_SEASON_OFFSET) are TV content too
+    let list = [...films];
     if (contentType === "movies") {
       list = list.filter((f) => f.movie.tmdb_id < TV_TMDB_OFFSET);
     } else if (contentType === "tv") {
       list = list.filter((f) => f.movie.tmdb_id >= TV_TMDB_OFFSET);
+    } else {
+      // "all": exclude raw seasons from the top-level view — they belong under their show
+      list = list.filter((f) => f.movie.tmdb_id < TV_SEASON_OFFSET);
     }
     if (genreFilter !== null) {
       list = list.filter((f) =>
@@ -118,20 +121,23 @@ export function FilmsSection({
           {/* Controls */}
           <div className="mb-4 space-y-3">
             {/* Content type filter */}
-            <div className="flex gap-1.5">
-              {(["all", "movies", "tv"] as ContentType[]).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => { setContentType(t); setGenreFilter(null); }}
-                  className={`rounded-full px-4 py-1.5 text-xs font-medium transition ${
-                    contentType === t
-                      ? "bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-400/30"
-                      : "bg-zinc-800/60 text-zinc-400 hover:text-zinc-200"
-                  }`}
-                >
-                  {t === "all" ? "All" : t === "movies" ? "Movies" : "TV Shows"}
-                </button>
-              ))}
+            <div className="flex items-center gap-2">
+              <span className="shrink-0 text-xs text-zinc-500">Type</span>
+              <div className="flex gap-1.5">
+                {(["all", "movies", "tv"] as ContentType[]).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => { setContentType(t); setGenreFilter(null); }}
+                    className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition ${
+                      contentType === t
+                        ? "bg-indigo-500/15 text-indigo-300"
+                        : "bg-zinc-800/60 text-zinc-400 hover:text-zinc-200"
+                    }`}
+                  >
+                    {t === "all" ? "All" : t === "movies" ? "Movies" : "TV Shows"}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Sort — scrollable row on mobile */}
@@ -207,9 +213,15 @@ export function FilmsSection({
             <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 lg:grid-cols-8">
               {sorted.map(({ movie, user_rating }) => {
                 const poster = posterUrl(movie.poster_path, "w342");
-                const href = movie.tmdb_id >= TV_TMDB_OFFSET
-                  ? `/show/${movie.tmdb_id - TV_TMDB_OFFSET}`
-                  : `/movie/${movie.tmdb_id}`;
+                // Seasons: use vote_count (parent show tmdb_id stored there) for the link
+                const href =
+                  movie.tmdb_id >= TV_SEASON_OFFSET
+                    ? movie.vote_count != null
+                      ? `/show/${movie.vote_count}`
+                      : "/browse?type=tv"
+                    : movie.tmdb_id >= TV_TMDB_OFFSET
+                    ? `/show/${movie.tmdb_id - TV_TMDB_OFFSET}`
+                    : `/movie/${movie.tmdb_id}`;
                 return (
                   <div key={movie.id} className="group relative">
                     <Link
@@ -233,11 +245,15 @@ export function FilmsSection({
                         </div>
                       )}
                     </Link>
-                    {movie.tmdb_id >= TV_TMDB_OFFSET && (
+                    {movie.tmdb_id >= TV_SEASON_OFFSET ? (
+                      <span className="absolute left-1 top-1 rounded bg-violet-600/80 px-1 py-0.5 text-[8px] font-bold text-white">
+                        S
+                      </span>
+                    ) : movie.tmdb_id >= TV_TMDB_OFFSET ? (
                       <span className="absolute left-1 top-1 rounded bg-violet-600/80 px-1 py-0.5 text-[8px] font-bold text-white">
                         TV
                       </span>
-                    )}
+                    ) : null}
                     {user_rating != null && (
                       <span className="absolute bottom-1 right-1 rounded bg-black/80 px-1 py-0.5 text-[9px] font-semibold text-indigo-200 ring-1 ring-white/10">
                         {user_rating}

@@ -21,6 +21,7 @@ type MovieRow = {
   release_year: number | null;
   poster_path: string | null;
   vote_average: number | null;
+  vote_count: number | null;
   genres: Genre[] | null;
 };
 
@@ -57,7 +58,7 @@ async function loadProfile() {
     supabase
       .from("watched_movies")
       .select(
-        "watched_at, user_rating, notes, movies ( id, tmdb_id, title, release_year, poster_path, vote_average, genres )",
+        "watched_at, user_rating, notes, movies ( id, tmdb_id, title, release_year, poster_path, vote_average, vote_count, genres )",
       )
       .eq("user_id", user.id)
       .order("watched_at", { ascending: false }),
@@ -117,9 +118,8 @@ async function loadProfile() {
       : null;
 
   const movieCount = watched.filter((w) => w.movie.tmdb_id < TV_TMDB_OFFSET).length;
-  const showCount = watched.filter(
-    (w) => w.movie.tmdb_id >= TV_TMDB_OFFSET && w.movie.tmdb_id < TV_SEASON_OFFSET,
-  ).length;
+  // Count whole-show entries + individual season entries both toward "Series"
+  const showCount = watched.filter((w) => w.movie.tmdb_id >= TV_TMDB_OFFSET).length;
 
   const watchlist = (watchlistRows ?? []).flatMap((r) => {
     const m = r.movies as MovieRow | MovieRow[] | null;
