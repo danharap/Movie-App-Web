@@ -97,7 +97,7 @@ export default async function FriendsPage() {
               No recent activity yet.
             </p>
             <p className="mt-1 text-xs text-zinc-500">
-              Once friends log movies, you'll see their latest watches here.
+              Once friends log movies, you&apos;ll see their latest watches here.
             </p>
           </div>
         ) : (
