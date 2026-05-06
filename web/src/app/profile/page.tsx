@@ -1,4 +1,5 @@
 import { AvatarUpload } from "./AvatarUpload";
+import { ProfileAppearance } from "./ProfileAppearance";
 import { EditProfileForm } from "./EditProfileForm";
 import { FavouritesPicker } from "./FavouritesPicker";
 import { FilmsSection } from "./FilmsSection";
@@ -53,7 +54,9 @@ async function loadProfile() {
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select("display_name, email, username, bio, avatar_url, is_public, watchlist_public")
+      .select(
+        "display_name, email, username, bio, avatar_url, banner_url, profile_background_url, is_public, watchlist_public",
+      )
       .eq("id", user.id)
       .maybeSingle(),
     supabase
@@ -222,11 +225,40 @@ export default async function ProfilePage() {
   const avatarUrl = (profile?.avatar_url as string | null) ?? null;
   const isPublic = (profile?.is_public as boolean) ?? true;
   const watchlistPublic = (profile?.watchlist_public as boolean) ?? true;
+  const bannerUrl = (profile?.banner_url as string | null) ?? null;
+  const profileBackgroundUrl = (profile?.profile_background_url as string | null) ?? null;
 
   const recent = watched.slice(0, 6);
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
+    <div className="relative isolate min-h-screen">
+      {/* Optional full-page backdrop */}
+      {profileBackgroundUrl ? (
+        <>
+          <div
+            aria-hidden
+            className="fixed inset-0 -z-20 bg-zinc-950 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: `url(${profileBackgroundUrl})` }}
+          />
+          <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-zinc-950/55 via-zinc-950/78 to-zinc-950/[0.94]" />
+        </>
+      ) : null}
+
+      <div className="relative z-10 mx-auto max-w-4xl px-4 py-12 sm:px-6">
+      {/* ── Banner ── */}
+      {bannerUrl ? (
+        <div className="relative mb-8 h-36 w-full overflow-hidden rounded-2xl border border-white/[0.08] bg-zinc-900 shadow-lg shadow-black/40 sm:h-44">
+          <Image
+            src={bannerUrl}
+            alt=""
+            fill
+            className="object-cover"
+            priority
+            sizes="(max-width:896px) 100vw, 896px"
+            unoptimized
+          />
+        </div>
+      ) : null}
 
       {/* ── Header ── */}
       <div className="mb-10 flex flex-col items-center gap-6 sm:flex-row sm:items-start">
@@ -266,6 +298,12 @@ export default async function ProfilePage() {
             bio={bio}
             isPublic={isPublic}
             watchlistPublic={watchlistPublic}
+          />
+          <ProfileAppearance
+            userId={user.id}
+            username={username}
+            bannerUrl={bannerUrl}
+            profileBackgroundUrl={profileBackgroundUrl}
           />
         </div>
       </div>
@@ -420,6 +458,7 @@ export default async function ProfilePage() {
         </div>
         <FeedbackForm existing={ownReview} compact />
       </section>
+      </div>
     </div>
   );
 }

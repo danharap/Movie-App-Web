@@ -160,9 +160,37 @@ export default async function PublicProfilePage({
   }));
 
   const displayName = target.display_name?.trim() || target.username || "Film fan";
+  const bannerUrl = target.banner_url ?? null;
+  const profileBackgroundUrl = target.profile_background_url ?? null;
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
+    <div className="relative isolate min-h-screen">
+      {profileBackgroundUrl ? (
+        <>
+          <div
+            aria-hidden
+            className="fixed inset-0 -z-20 bg-zinc-950 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: `url(${profileBackgroundUrl})` }}
+          />
+          <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-zinc-950/55 via-zinc-950/78 to-zinc-950/[0.94]" />
+        </>
+      ) : null}
+
+      <div className="relative z-10 mx-auto max-w-4xl px-4 py-12 sm:px-6">
+
+      {bannerUrl ? (
+        <div className="relative mb-8 h-36 w-full overflow-hidden rounded-2xl border border-white/[0.08] bg-zinc-900 shadow-lg shadow-black/40 sm:h-44">
+          <Image
+            src={bannerUrl}
+            alt=""
+            fill
+            className="object-cover"
+            priority
+            sizes="(max-width:896px) 100vw, 896px"
+            unoptimized
+          />
+        </div>
+      ) : null}
 
       {/* ── Header ── */}
       <div className="mb-10 flex flex-col items-center gap-6 sm:flex-row sm:items-start">
@@ -385,6 +413,7 @@ export default async function PublicProfilePage({
           </div>
         </section>
       ) : null}
+      </div>
     </div>
   );
 }

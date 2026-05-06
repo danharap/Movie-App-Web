@@ -20,7 +20,9 @@ export async function updateProfile(payload: {
   username?: string;
   display_name?: string;
   bio?: string;
-  avatar_url?: string;
+  avatar_url?: string | null;
+  banner_url?: string | null;
+  profile_background_url?: string | null;
   is_public?: boolean;
   watchlist_public?: boolean;
 }) {
@@ -55,6 +57,13 @@ export async function updateProfile(payload: {
     throw new Error("Failed to save profile.");
   }
   revalidatePath("/profile");
+}
+
+/** Invalidate public username route after banner/backdrop/logo changes */
+export async function revalidateUsernameProfile(username: string) {
+  const u = username.trim().toLowerCase();
+  if (!u || !/^[a-z0-9_]{3,24}$/.test(u)) return;
+  revalidatePath(`/user/${u}`);
 }
 
 // ---------------------------------------------------------------------------

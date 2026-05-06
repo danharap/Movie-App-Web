@@ -6,6 +6,8 @@ export type PublicProfile = {
   display_name: string | null;
   bio: string | null;
   avatar_url: string | null;
+  banner_url: string | null;
+  profile_background_url: string | null;
   is_public: boolean;
   watchlist_public: boolean;
 };
@@ -44,7 +46,9 @@ export async function searchUsers(
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, username, display_name, bio, avatar_url, is_public, watchlist_public")
+      .select(
+        "id, username, display_name, bio, avatar_url, banner_url, profile_background_url, is_public, watchlist_public",
+      )
       .ilike("username", `${q}%`)
       .eq("is_public", true)
       .neq("id", currentUserId ?? "00000000-0000-0000-0000-000000000000")
@@ -101,7 +105,9 @@ export async function getProfileByUsername(
     const supabase = await createClient();
     const { data } = await supabase
       .from("profiles")
-      .select("id, username, display_name, bio, avatar_url, is_public, watchlist_public")
+      .select(
+        "id, username, display_name, bio, avatar_url, banner_url, profile_background_url, is_public, watchlist_public",
+      )
       .eq("username", username.toLowerCase())
       .maybeSingle();
     return (data as PublicProfile | null) ?? null;
@@ -153,7 +159,9 @@ export async function getFriends(userId: string): Promise<PublicProfile[]> {
 
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("id, username, display_name, bio, avatar_url, is_public, watchlist_public")
+      .select(
+        "id, username, display_name, bio, avatar_url, banner_url, profile_background_url, is_public, watchlist_public",
+      )
       .in("id", friendIds);
 
     return (profiles ?? []) as PublicProfile[];
@@ -172,7 +180,7 @@ export async function getPendingRequests(userId: string): Promise<
     const { data } = await supabase
       .from("friendships")
       .select(
-        "requester_id, profiles!friendships_requester_id_fkey(id, username, display_name, bio, avatar_url, is_public, watchlist_public)",
+        "requester_id, profiles!friendships_requester_id_fkey(id, username, display_name, bio, avatar_url, banner_url, profile_background_url, is_public, watchlist_public)",
       )
       .eq("addressee_id", userId)
       .eq("status", "pending");
