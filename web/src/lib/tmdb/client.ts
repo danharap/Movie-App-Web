@@ -108,3 +108,25 @@ export async function getPopularMovies(page = "1") {
 export async function getTrendingMovies(window: "day" | "week" = "week") {
   return tmdbFetch<DiscoverResponse>(`/trending/movie/${window}`);
 }
+
+export type NowPlayingResponse = {
+  page: number;
+  results: Array<{
+    id: number;
+    title: string;
+    overview: string;
+    poster_path: string | null;
+    backdrop_path: string | null;
+    release_date: string;
+    vote_average: number;
+    vote_count: number;
+    popularity: number;
+    genre_ids: number[];
+  }>;
+  total_pages: number;
+  dates?: { maximum: string; minimum: string };
+};
+
+export async function getNowPlayingMovies(page = "1") {
+  return tmdbFetch<NowPlayingResponse>("/movie/now_playing", { page });
+}
