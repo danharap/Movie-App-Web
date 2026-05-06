@@ -23,13 +23,14 @@ export async function SiteHeader() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Fetch profile for avatar + display name
+  // Fetch profile for avatar, display name, and role
   let avatarUrl: string | null = null;
   let displayName: string | null = null;
+  let isAdmin = false;
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("display_name, avatar_url")
+      .select("display_name, avatar_url, role")
       .eq("id", user.id)
       .maybeSingle();
     avatarUrl = (profile?.avatar_url as string | null) ?? null;
@@ -37,6 +38,8 @@ export async function SiteHeader() {
       (profile?.display_name as string | null)?.trim() ||
       user.email?.split("@")[0] ||
       "Account";
+    const role = (profile?.role as string | null) ?? "user";
+    isAdmin = role === "admin" || role === "super_admin" || role === "moderator";
   }
 
   return (
@@ -71,6 +74,14 @@ export async function SiteHeader() {
                 </Link>
               ))
             : null}
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="rounded-full bg-amber-300/10 px-3 py-1.5 text-xs font-medium text-amber-200 transition hover:bg-amber-300/20 sm:text-sm"
+            >
+              Admin
+            </Link>
+          )}
         </nav>
 
         <div className="flex flex-wrap items-center justify-end gap-2">
