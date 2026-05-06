@@ -1,0 +1,33 @@
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { OnboardingWizard } from "./OnboardingWizard";
+
+export const metadata = {
+  title: "Welcome to Nudge Film",
+};
+
+export default async function OnboardingPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const displayName =
+    (profile?.display_name as string | null)?.trim() ||
+    user.email?.split("@")[0] ||
+    "there";
+
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
+      <OnboardingWizard displayName={displayName} />
+    </main>
+  );
+}
