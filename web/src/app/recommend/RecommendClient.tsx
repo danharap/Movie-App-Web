@@ -126,8 +126,7 @@ export function RecommendClient() {
       <section className="reveal space-y-3" style={{ animationDelay: "0.05s" }}>
         <p className="text-sm font-medium text-zinc-300">Vibe</p>
         <p className="text-xs leading-relaxed text-zinc-500">
-          Tap one or more — we map each to TMDb genres (unless you lock genres below).
-          Keep at least one selected.
+          Pick a mood. We&apos;ll find films that match it. Keep at least one selected.
         </p>
         <div className="flex flex-wrap gap-2">
           {VIBE_OPTIONS.map(({ value, label }) => (
@@ -150,10 +149,9 @@ export function RecommendClient() {
       <section className="reveal space-y-3" style={{ animationDelay: "0.12s" }}>
         <p className="text-sm font-medium text-zinc-300">Genres (optional)</p>
         <p className="text-xs leading-relaxed text-zinc-500">
-          When you pick genres here, they <span className="text-zinc-400">take over</span>{" "}
-          from vibe — we only search within those categories and require real TMDb
-          genre tags (so a family comedy won&apos;t appear if you only chose Horror +
-          Thriller).
+          Optional. If you pick genres, results will be filtered strictly to those
+          categories — ignoring your vibe selection above. Leave blank to let the
+          vibe chips decide.
         </p>
         <div className="flex max-h-48 flex-wrap gap-2 overflow-y-auto pr-1">
           {TMDB_GENRE_OPTIONS.map((g) => (
