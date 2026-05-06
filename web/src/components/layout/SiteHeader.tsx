@@ -13,6 +13,7 @@ const authedLinks = [
   { href: "/watched", label: "Watched" },
   { href: "/friends", label: "Friends" },
   { href: "/profile", label: "Profile" },
+  { href: "/import", label: "Import" },
 ];
 
 export async function SiteHeader() {
