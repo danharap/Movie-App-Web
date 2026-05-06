@@ -1,6 +1,7 @@
 import { ShowActions } from "./ShowActions";
+import { SeasonRater } from "./SeasonRater";
 import { getTVDetails } from "@/lib/tmdb/client";
-import { posterUrl, toTVStoredId } from "@/lib/tmdb/constants";
+import { posterUrl, toTVStoredId, toTVSeasonStoredId } from "@/lib/tmdb/constants";
 import { createClient } from "@/lib/supabase/server";
 import Image from "next/image";
 import Link from "next/link";
@@ -25,27 +26,54 @@ export default async function ShowDetailPage({ params }: Props) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Load existing diary entry using the TV-offset stored ID
-  let existing: { user_rating: number | null; notes: string | null } | null = null;
+  type DiaryEntry = { user_rating: number | null; notes: string | null };
+
+  // Load show-level diary entry
+  let existing: DiaryEntry | null = null;
+  // Load per-season ratings: keyed by the season's own TMDb ID
+  let seasonRatings: Record<number, DiaryEntry> = {};
+
   if (user) {
-    const storedId = toTVStoredId(tmdbId);
-    const { data: movieRow } = await supabase
+    const showStoredId = toTVStoredId(tmdbId);
+
+    // Season stored IDs (exclude season 0 / Specials)
+    const relevantSeasons = (show.seasons ?? []).filter((s) => s.season_number > 0);
+    const seasonStoredIds = relevantSeasons.map((s) => toTVSeasonStoredId(s.id));
+
+    // Batch: fetch show row + all season rows in one go
+    const allStoredIds = [showStoredId, ...seasonStoredIds];
+    const { data: movieRows } = await supabase
       .from("movies")
-      .select("id")
-      .eq("tmdb_id", storedId)
-      .maybeSingle();
-    if (movieRow?.id) {
-      const { data: entry } = await supabase
+      .select("id, tmdb_id")
+      .in("tmdb_id", allStoredIds);
+
+    const rowMap = Object.fromEntries(
+      (movieRows ?? []).map((r) => [Number(r.tmdb_id), Number(r.id)]),
+    );
+    const movieIds = Object.values(rowMap);
+
+    if (movieIds.length > 0) {
+      const { data: watchedRows } = await supabase
         .from("watched_movies")
-        .select("user_rating, notes")
+        .select("movie_id, user_rating, notes")
         .eq("user_id", user.id)
-        .eq("movie_id", movieRow.id)
-        .maybeSingle();
-      if (entry) {
-        existing = {
-          user_rating: entry.user_rating as number | null,
-          notes: entry.notes as string | null,
+        .in("movie_id", movieIds);
+
+      for (const row of watchedRows ?? []) {
+        const storedId = Object.entries(rowMap).find(([, id]) => id === Number(row.movie_id))?.[0];
+        if (!storedId) continue;
+        const n = Number(storedId);
+        const entry: DiaryEntry = {
+          user_rating: row.user_rating as number | null,
+          notes: row.notes as string | null,
         };
+        if (n === showStoredId) {
+          existing = entry;
+        } else {
+          // Recover original season TMDb ID
+          const seasonTmdbId = n - 20_000_000;
+          seasonRatings[seasonTmdbId] = entry;
+        }
       }
     }
   }
@@ -165,34 +193,47 @@ export default async function ShowDetailPage({ params }: Props) {
               {seasons.map((season) => {
                 const seasonPoster = posterUrl(season.poster_path, "w342");
                 const airYear = season.air_date?.slice(0, 4);
+                const seasonEntry = seasonRatings[season.id] ?? null;
                 return (
                   <div
                     key={season.id}
-                    className="flex gap-4 rounded-2xl border border-white/[0.07] bg-zinc-900/50 p-4"
+                    className="flex flex-col gap-3 rounded-2xl border border-white/[0.07] bg-zinc-900/50 p-4"
                   >
-                    <div className="relative h-20 w-14 shrink-0 overflow-hidden rounded-lg bg-zinc-800">
-                      {seasonPoster ? (
-                        <Image
-                          src={seasonPoster}
-                          alt={season.name}
-                          fill
-                          className="object-cover"
-                          sizes="56px"
-                        />
-                      ) : null}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-medium text-white">{season.name}</p>
-                      <p className="mt-0.5 text-xs text-zinc-500">
-                        {season.episode_count} episodes
-                        {airYear ? ` · ${airYear}` : ""}
-                      </p>
-                      {season.overview && (
-                        <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-zinc-500">
-                          {season.overview}
+                    <div className="flex gap-4">
+                      <div className="relative h-20 w-14 shrink-0 overflow-hidden rounded-lg bg-zinc-800">
+                        {seasonPoster ? (
+                          <Image
+                            src={seasonPoster}
+                            alt={season.name}
+                            fill
+                            className="object-cover"
+                            sizes="56px"
+                          />
+                        ) : null}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-white">{season.name}</p>
+                        <p className="mt-0.5 text-xs text-zinc-500">
+                          {season.episode_count} episodes
+                          {airYear ? ` · ${airYear}` : ""}
                         </p>
-                      )}
+                        {season.overview && (
+                          <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-zinc-500">
+                            {season.overview}
+                          </p>
+                        )}
+                      </div>
                     </div>
+                    <SeasonRater
+                      seasonTmdbId={season.id}
+                      showName={show.name}
+                      seasonName={season.name}
+                      posterPath={season.poster_path}
+                      airDate={season.air_date}
+                      episodeRunTime={show.episode_run_time?.[0] ?? null}
+                      isLoggedIn={!!user}
+                      existing={seasonEntry}
+                    />
                   </div>
                 );
               })}

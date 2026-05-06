@@ -180,13 +180,13 @@ export function WelcomeStep({ onContinue }: WelcomeStepProps) {
         ))}
       </div>
 
-      {/* Slide card */}
-      <div className="rounded-2xl border border-white/10 bg-zinc-900/60 p-6 sm:p-8">
+      {/* Slide card — fixed minimum height so nav buttons never jump */}
+      <div className="flex min-h-[420px] flex-col rounded-2xl border border-white/10 bg-zinc-900/60 p-6 sm:p-8">
         <div className="mb-5 flex justify-center">{current.icon}</div>
         <h2 className="mb-4 text-center text-xl font-semibold text-white sm:text-2xl">
           {current.title}
         </h2>
-        <div>{current.body}</div>
+        <div className="flex-1">{current.body}</div>
       </div>
 
       {/* Navigation */}

@@ -3,7 +3,7 @@
 import { getMovieDetails, getTVDetails } from "@/lib/tmdb/client";
 import { createClient } from "@/lib/supabase/server";
 import { trackServerEvent } from "@/lib/analytics/track";
-import { TV_TMDB_OFFSET, toTVStoredId } from "@/lib/tmdb/constants";
+import { TV_TMDB_OFFSET, toTVStoredId, TV_SEASON_OFFSET, toTVSeasonStoredId } from "@/lib/tmdb/constants";
 import { revalidatePath } from "next/cache";
 
 async function ensureMovieRow(tmdbId: number): Promise<number> {
@@ -311,6 +311,90 @@ export async function addTVToWatchlist(tmdbId: number) {
   }
   void trackServerEvent("tv_watchlist_add", { tmdbId }, user.id);
   revalidatePath("/watchlist");
+}
+
+// ---------------------------------------------------------------------------
+// Individual TV Season actions
+// ---------------------------------------------------------------------------
+
+async function ensureTVSeasonRow(
+  seasonTmdbId: number,
+  showName: string,
+  seasonName: string,
+  posterPath: string | null,
+  airDate: string | null,
+  episodeRunTime: number | null,
+): Promise<number> {
+  const storedId = toTVSeasonStoredId(seasonTmdbId);
+  const supabase = await createClient();
+
+  const { data: existing } = await supabase
+    .from("movies")
+    .select("id")
+    .eq("tmdb_id", storedId)
+    .maybeSingle();
+  if (existing?.id) return Number(existing.id);
+
+  const year = airDate && airDate.length >= 4 ? Number(airDate.slice(0, 4)) : null;
+
+  const row = {
+    tmdb_id: storedId,
+    title: `${showName} — ${seasonName}`,
+    release_year: Number.isFinite(year) ? year : null,
+    poster_path: posterPath,
+    backdrop_path: null,
+    overview: null,
+    runtime: episodeRunTime,
+    vote_average: null,
+    vote_count: null,
+    genres: [],
+  };
+
+  const { data, error } = await supabase
+    .from("movies")
+    .upsert(row, { onConflict: "tmdb_id" })
+    .select("id")
+    .single();
+
+  if (error) {
+    console.error("[library] ensureTVSeasonRow upsert error:", error.code, error.message);
+    throw new Error("Failed to save season. Please try again.");
+  }
+  return Number(data.id);
+}
+
+export async function markTVSeasonWatched(
+  seasonTmdbId: number,
+  showName: string,
+  seasonName: string,
+  posterPath: string | null,
+  airDate: string | null,
+  episodeRunTime: number | null,
+  rating?: number | null,
+  notes?: string | null,
+) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Sign in to save your watch history.");
+
+  const movieId = await ensureTVSeasonRow(seasonTmdbId, showName, seasonName, posterPath, airDate, episodeRunTime);
+  const { error } = await supabase.from("watched_movies").upsert(
+    {
+      user_id: user.id,
+      movie_id: movieId,
+      user_rating: rating ?? null,
+      notes: notes ?? null,
+      watched_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id,movie_id" },
+  );
+  if (error) {
+    console.error("[library] markTVSeasonWatched error:", error.code, error.message);
+    throw new Error("Failed to save to diary. Please try again.");
+  }
+  void trackServerEvent("tv_watched", { tmdbId: seasonTmdbId, rating: rating ?? null }, user.id);
+  revalidatePath("/watched");
+  revalidatePath("/profile");
 }
 
 export async function saveUserPreferences(payload: {
