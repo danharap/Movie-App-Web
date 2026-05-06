@@ -88,7 +88,7 @@ export function FilmsSection({
         break;
     }
     return list;
-  }, [films, sort, genreFilter]);
+  }, [films, sort, genreFilter, contentType]);
 
   return (
     <section className="mb-12">
