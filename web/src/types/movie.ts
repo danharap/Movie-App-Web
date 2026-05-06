@@ -16,9 +16,22 @@ export type TmdbMovieSummary = {
 
 export type RecommendationReason = {
   label: string;
+  /** "vibe" | "genre" | "quality" | "llm" | "conflict" */
+  kind?: string;
+};
+
+export type FinderMeta = {
+  conflictDetected: boolean;
+  userMessage: string;
 };
 
 export type RecommendedMovie = TmdbMovieSummary & {
   release_year: number | null;
   reasons: RecommendationReason[];
+};
+
+export type RecommendationResponse = {
+  movies: RecommendedMovie[];
+  finderMeta?: FinderMeta;
+  llmSkipped?: boolean;
 };

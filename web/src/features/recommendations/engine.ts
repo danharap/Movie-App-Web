@@ -1,7 +1,20 @@
 import { VIBE_GENRE_IDS, normalizeMoodKey } from "@/config/moodMappings";
+import {
+  conflictMessage,
+  detectConflict,
+  LIGHT_DARK_BRIDGE_IDS,
+} from "@/config/recommendationSignals";
 import { TMDB_GENRE_BY_ID } from "@/config/tmdbGenres";
-import { discoverMovies, getMovieDetails, type DiscoverResponse } from "@/lib/tmdb/client";
-import type { RecommendedMovie, RecommendationReason } from "@/types/movie";
+import {
+  discoverMovies,
+  getMovieDetails,
+  type DiscoverResponse,
+} from "@/lib/tmdb/client";
+import type {
+  FinderMeta,
+  RecommendedMovie,
+  RecommendationReason,
+} from "@/types/movie";
 import type { RecommendationInput } from "./schema";
 
 type DiscoverMovie = DiscoverResponse["results"][number];
@@ -17,18 +30,6 @@ function shuffle<T>(arr: T[], seedRandom: () => number) {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
-}
-
-function score(
-  m: { vote_average: number; popularity: number },
-  hiddenGem: boolean,
-) {
-  const vote = m.vote_average ?? 0;
-  const pop = m.popularity ?? 0;
-  if (hiddenGem) {
-    return vote * 2.2 - Math.log1p(pop) * 0.18;
-  }
-  return vote * 1.4 + Math.log1p(pop) * 0.22;
 }
 
 function yearFromDate(release_date: string) {
@@ -52,14 +53,69 @@ function pickedGenreNames(picked: number[]) {
   return picked.map((id) => TMDB_GENRE_BY_ID[id] ?? `#${id}`).join(", ");
 }
 
+/**
+ * Composite scoring: balances genre-fit, vibe-fit, and quality.
+ * In conflict mode, dual-tagged bridge films get an extra boost.
+ */
+function compositeScore(
+  m: DiscoverMovie,
+  opts: {
+    pickedGenres: number[];
+    vibeGenreIds: number[];
+    bridgeIds: number[];
+    hiddenGem: boolean;
+    conflictMode: boolean;
+  },
+): number {
+  const gids = m.genre_ids ?? [];
+  const vote = m.vote_average ?? 0;
+  const pop = m.popularity ?? 0;
+
+  // Genre fit: fraction of picked genres present in the movie.
+  const genreFit =
+    opts.pickedGenres.length > 0
+      ? opts.pickedGenres.filter((id) => gids.includes(id)).length /
+        opts.pickedGenres.length
+      : 0.5;
+
+  // Vibe fit: fraction of vibe genres present.
+  const vibeFit =
+    opts.vibeGenreIds.length > 0
+      ? opts.vibeGenreIds.filter((id) => gids.includes(id)).length /
+        Math.max(opts.vibeGenreIds.length, 1)
+      : 0.5;
+
+  // Quality signal.
+  const qualityScore = opts.hiddenGem
+    ? vote * 2.2 - Math.log1p(pop) * 0.18
+    : vote * 1.4 + Math.log1p(pop) * 0.22;
+
+  // Bridge bonus: movie has both a picked genre AND a bridge genre (dual-tag).
+  const hasBridge = opts.bridgeIds.some((id) => gids.includes(id));
+  const bridgeBonus =
+    opts.conflictMode && hasBridge && genreFit > 0 ? 3.0 : 0;
+
+  const genreWeight = opts.conflictMode ? 2.5 : 3.0;
+  const vibeWeight = opts.conflictMode ? 2.0 : 1.5;
+  const qualityWeight = 1.0;
+
+  return (
+    genreWeight * genreFit +
+    vibeWeight * vibeFit +
+    qualityWeight * qualityScore +
+    bridgeBonus
+  );
+}
+
 function buildReasons(
   input: RecommendationInput,
   movieGenreIds: number[],
-  vibeGenreSet: Set<number>,
+  vibeGenreIds: number[],
   opts: {
     genreLock: boolean;
     pickedGenres: number[];
     pickedGenreMode: "all" | "any";
+    conflictMode: boolean;
   },
 ): RecommendationReason[] {
   const reasons: RecommendationReason[] = [];
@@ -69,22 +125,37 @@ function buildReasons(
       opts.pickedGenreMode === "all" ? "match all" : "match at least one";
     reasons.push({
       label: `Genres: ${pickedGenreNames(opts.pickedGenres)} (${modeLabel})`,
+      kind: "genre",
     });
-  } else {
+  }
+
+  if (input.vibes.length) {
     const vibeLabel = input.vibes.map((v) => v.trim()).filter(Boolean).join(", ");
-    reasons.push({ label: `Vibes: ${vibeLabel}` });
-    const overlap = movieGenreIds.filter((id) => vibeGenreSet.has(id));
-    if (overlap.length) {
-      reasons.push({ label: "Genre match for what you asked for" });
+    const vibeOverlap = movieGenreIds.filter((id) =>
+      vibeGenreIds.includes(id),
+    ).length;
+    if (!opts.genreLock || vibeOverlap > 0) {
+      reasons.push({
+        label: `Vibes: ${vibeLabel}`,
+        kind: "vibe",
+      });
     }
   }
 
+  if (opts.conflictMode) {
+    reasons.push({
+      label: "Best fit for mixed preferences",
+      kind: "conflict",
+    });
+  }
+
   if (input.hiddenGem) {
-    reasons.push({ label: "Weighted toward strong ratings vs. hype" });
+    reasons.push({ label: "Weighted toward strong ratings vs. hype", kind: "quality" });
   }
   if (input.streamingOnly) {
     reasons.push({ label: "Streaming availability filter" });
   }
+
   return reasons.slice(0, 5);
 }
 
@@ -110,35 +181,56 @@ async function discoverPages(
   return merged;
 }
 
+export type EngineResult = {
+  movies: RecommendedMovie[];
+  finderMeta: FinderMeta;
+};
+
 export async function runRecommendationEngine(
   input: RecommendationInput,
   excludeTmdbIds: Set<number>,
-): Promise<RecommendedMovie[]> {
+): Promise<EngineResult> {
   const userPicked = uniq(input.genres ?? []);
   const genreLock = userPicked.length > 0;
 
   const vibeKeys = input.vibes.map((v) => normalizeMoodKey(v));
   const hasNostalgic = vibeKeys.includes("nostalgic");
 
-  let genreIdsForDiscover: number[] = [];
-  if (!genreLock) {
-    for (const k of vibeKeys) {
-      genreIdsForDiscover.push(...(VIBE_GENRE_IDS[k] ?? []));
-    }
-    genreIdsForDiscover = uniq(genreIdsForDiscover);
+  // Always compute vibe genre pool.
+  let vibeGenreIds: number[] = [];
+  for (const k of vibeKeys) {
+    vibeGenreIds.push(...(VIBE_GENRE_IDS[k] ?? []));
   }
+  vibeGenreIds = uniq(vibeGenreIds);
 
-  const vibeGenreSet = new Set(genreIdsForDiscover);
+  // Detect conflict: light vibes + dark genres with no overlap.
+  const conflictMode = genreLock && detectConflict(vibeGenreIds, userPicked);
 
-  if (genreLock) {
-    genreIdsForDiscover = [...userPicked];
+  const finderMeta: FinderMeta = {
+    conflictDetected: conflictMode,
+    userMessage: conflictMode
+      ? conflictMessage(
+          input.vibes,
+          userPicked.map((id) => TMDB_GENRE_BY_ID[id] ?? `#${id}`),
+        )
+      : "",
+  };
+
+  // Build discover genre list.
+  let discoverGenreIds: number[];
+
+  if (!genreLock) {
+    // Vibe-only: use vibe pool with optional surpriseMe shuffle.
+    discoverGenreIds = input.surpriseMe && vibeGenreIds.length > 0
+      ? shuffle(vibeGenreIds, Math.random).slice(0, Math.max(3, Math.min(vibeGenreIds.length, 6)))
+      : vibeGenreIds;
+  } else if (conflictMode) {
+    // Conflict: OR of user picks + bridge genres (comedy etc.) so dual-tagged
+    // films like horror-comedies can surface.
+    discoverGenreIds = uniq([...userPicked, ...LIGHT_DARK_BRIDGE_IDS]);
   } else {
-    if (input.surpriseMe && genreIdsForDiscover.length > 0) {
-      genreIdsForDiscover = shuffle(genreIdsForDiscover, Math.random).slice(
-        0,
-        Math.max(3, Math.min(genreIdsForDiscover.length, 6)),
-      );
-    }
+    // Normal genre lock: use only user picks.
+    discoverGenreIds = [...userPicked];
   }
 
   const params = new URLSearchParams();
@@ -146,10 +238,13 @@ export async function runRecommendationEngine(
   params.set("vote_average.gte", String(input.minVoteAverage));
   params.set("include_adult", "false");
 
-  if (genreIdsForDiscover.length) {
-    params.set("with_genres", genreIdsForDiscover.join("|"));
+  if (discoverGenreIds.length) {
+    params.set("with_genres", discoverGenreIds.join("|"));
   }
-  params.set("sort_by", input.hiddenGem ? "vote_average.desc" : "popularity.desc");
+  params.set(
+    "sort_by",
+    input.hiddenGem ? "vote_average.desc" : "popularity.desc",
+  );
 
   if (input.runtimeMin != null) {
     params.set("with_runtime.gte", String(input.runtimeMin));
@@ -186,9 +281,11 @@ export async function runRecommendationEngine(
     (m.vote_count ?? 0) >= 40;
 
   let filtered = results.filter(baseFilter);
+
   let pickedGenreMode: "all" | "any" = "any";
 
-  if (genreLock) {
+  if (genreLock && !conflictMode) {
+    // Strict genre lock: prefer all-match, fall back to any-match.
     const strictList = filtered.filter((m) =>
       movieMatchesPickedGenres(m.genre_ids, userPicked, "all"),
     );
@@ -201,12 +298,26 @@ export async function runRecommendationEngine(
       );
       pickedGenreMode = "any";
     }
+  } else if (genreLock && conflictMode) {
+    // Conflict mode: require at least one user-picked genre (avoids pure-comedy drift).
+    filtered = filtered.filter((m) =>
+      movieMatchesPickedGenres(m.genre_ids, userPicked, "any"),
+    );
+    pickedGenreMode = "any";
   }
 
+  // Composite scoring.
+  const bridgeIds = conflictMode ? LIGHT_DARK_BRIDGE_IDS : [];
   const scored = filtered
     .map((m) => ({
       m,
-      s: score(m, input.hiddenGem ?? false),
+      s: compositeScore(m, {
+        pickedGenres: userPicked,
+        vibeGenreIds,
+        bridgeIds,
+        hiddenGem: input.hiddenGem ?? false,
+        conflictMode,
+      }),
     }))
     .sort((a, b) => b.s - a.s);
 
@@ -215,7 +326,8 @@ export async function runRecommendationEngine(
     if (!uniqueById.has(m.id)) uniqueById.set(m.id, m);
   }
 
-  const top = [...uniqueById.values()].slice(0, 8);
+  // Fetch up to 16 candidates for detail hydration; final list trimmed to 8.
+  const top = [...uniqueById.values()].slice(0, 16);
 
   const detailed = await Promise.all(
     top.map(async (m) => {
@@ -231,21 +343,28 @@ export async function runRecommendationEngine(
   const out: RecommendedMovie[] = [];
 
   for (const { summary, details } of detailed) {
+    if (out.length >= 8) break;
+
     const src = details ?? summary;
     const genreIdsList =
       details?.genres?.map((g) => g.id) ?? summary.genre_ids ?? [];
 
-    if (
-      genreLock &&
-      !movieMatchesPickedGenres(genreIdsList, userPicked, pickedGenreMode)
-    ) {
-      continue;
+    // Final genre check after detail resolution.
+    if (genreLock && !conflictMode) {
+      if (!movieMatchesPickedGenres(genreIdsList, userPicked, pickedGenreMode)) {
+        continue;
+      }
+    } else if (genreLock && conflictMode) {
+      if (!movieMatchesPickedGenres(genreIdsList, userPicked, "any")) {
+        continue;
+      }
     }
 
-    const reasons = buildReasons(input, genreIdsList, vibeGenreSet, {
+    const reasons = buildReasons(input, genreIdsList, vibeGenreIds, {
       genreLock,
       pickedGenres: userPicked,
       pickedGenreMode,
+      conflictMode,
     });
 
     out.push({
@@ -254,7 +373,8 @@ export async function runRecommendationEngine(
       overview: src.overview,
       poster_path: src.poster_path,
       backdrop_path: src.backdrop_path,
-      release_date: "release_date" in src ? src.release_date : summary.release_date,
+      release_date:
+        "release_date" in src ? src.release_date : summary.release_date,
       vote_average: src.vote_average,
       vote_count: src.vote_count,
       popularity: src.popularity,
@@ -267,5 +387,5 @@ export async function runRecommendationEngine(
     });
   }
 
-  return out;
+  return { movies: out, finderMeta };
 }

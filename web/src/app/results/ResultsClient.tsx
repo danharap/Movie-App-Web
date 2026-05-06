@@ -2,13 +2,14 @@
 
 import { STORAGE_KEY_LAST_RECOMMENDATION } from "@/config/brand";
 import { MovieResultCard } from "@/features/movies/MovieResultCard";
-import type { RecommendedMovie } from "@/types/movie";
+import type { FinderMeta, RecommendedMovie } from "@/types/movie";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type Stored = {
   input: unknown;
   movies: RecommendedMovie[];
+  finderMeta?: FinderMeta;
 };
 
 export function ResultsClient() {
@@ -65,6 +66,13 @@ export function ResultsClient() {
           signed in.
         </p>
       </header>
+
+      {data.finderMeta?.conflictDetected && data.finderMeta.userMessage ? (
+        <div className="rounded-xl border border-amber-200/20 bg-amber-200/[0.06] px-4 py-3 text-sm text-amber-100/80">
+          <span className="mr-2 font-medium text-amber-200">Mixed preferences detected —</span>
+          {data.finderMeta.userMessage}
+        </div>
+      ) : null}
       <ul className="flex flex-col gap-6">
         {data.movies.map((m, i) => (
           <li

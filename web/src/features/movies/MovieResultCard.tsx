@@ -17,12 +17,12 @@ export function MovieResultCard({ movie }: Props) {
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  function run(action: () => Promise<void>) {
+  function run(action: () => Promise<void>, successMsg = "Saved.") {
     setMessage(null);
     startTransition(async () => {
       try {
         await action();
-        setMessage("Saved.");
+        setMessage(successMsg);
       } catch (e) {
         setMessage(e instanceof Error ? e.message : "Something went wrong.");
       }
@@ -66,9 +66,14 @@ export function MovieResultCard({ movie }: Props) {
               <span className="text-sm text-zinc-500">{movie.runtime} min</span>
             ) : null}
           </div>
-          <p className="mt-1 text-sm text-amber-100/80">
-            ★ {movie.vote_average.toFixed(1)}{" "}
+          <p className="mt-1 flex flex-wrap items-baseline gap-x-2 text-sm text-amber-100/80">
+            <span>★ {movie.vote_average.toFixed(1)}</span>
             <span className="text-zinc-500">/ 10</span>
+            {movie.vote_count ? (
+              <span className="text-xs text-zinc-600">
+                {movie.vote_count.toLocaleString()} votes
+              </span>
+            ) : null}
           </p>
         </div>
         <p className="line-clamp-4 text-sm leading-relaxed text-zinc-400">
@@ -88,7 +93,7 @@ export function MovieResultCard({ movie }: Props) {
           <button
             type="button"
             disabled={isPending}
-            onClick={() => run(() => markWatched(movie.id))}
+            onClick={() => run(() => markWatched(movie.id), "Logged to diary.")}
             className="rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/15 disabled:opacity-50"
           >
             Watched
@@ -96,7 +101,7 @@ export function MovieResultCard({ movie }: Props) {
           <button
             type="button"
             disabled={isPending}
-            onClick={() => run(() => addToWatchlist(movie.id))}
+            onClick={() => run(() => addToWatchlist(movie.id), "Added to watchlist.")}
             className="rounded-full border border-white/15 px-4 py-2 text-sm text-zinc-200 transition hover:border-amber-200/40 hover:text-white disabled:opacity-50"
           >
             Watchlist
@@ -104,7 +109,7 @@ export function MovieResultCard({ movie }: Props) {
           <button
             type="button"
             disabled={isPending}
-            onClick={() => run(() => dismissMovie(movie.id, "not_interested"))}
+            onClick={() => run(() => dismissMovie(movie.id, "not_interested"), "Hidden from future runs.")}
             className="rounded-full px-4 py-2 text-sm text-zinc-500 transition hover:text-zinc-300 disabled:opacity-50"
           >
             Not for me

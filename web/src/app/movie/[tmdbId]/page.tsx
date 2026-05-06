@@ -1,9 +1,12 @@
-import { markSeenFromForm, queueFilmFromForm } from "@/app/movie/actions";
+import { MovieActions } from "./MovieActions";
 import { getMovieDetails } from "@/lib/tmdb/client";
 import { posterUrl } from "@/lib/tmdb/constants";
+import { createClient } from "@/lib/supabase/server";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+
+export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ tmdbId: string }> };
 
@@ -17,6 +20,37 @@ export default async function MovieDetailPage({ params }: Props) {
     movie = await getMovieDetails(tmdbId);
   } catch {
     notFound();
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Load existing diary entry for this user + movie.
+  let existing: { user_rating: number | null; notes: string | null } | null = null;
+  if (user) {
+    const { data: movieRow } = await supabase
+      .from("movies")
+      .select("id")
+      .eq("tmdb_id", tmdbId)
+      .maybeSingle();
+
+    if (movieRow?.id) {
+      const { data: entry } = await supabase
+        .from("watched_movies")
+        .select("user_rating, notes")
+        .eq("user_id", user.id)
+        .eq("movie_id", movieRow.id)
+        .maybeSingle();
+
+      if (entry) {
+        existing = {
+          user_rating: entry.user_rating as number | null,
+          notes: entry.notes as string | null,
+        };
+      }
+    }
   }
 
   const backdrop = posterUrl(movie.backdrop_path, "original");
@@ -58,10 +92,24 @@ export default async function MovieDetailPage({ params }: Props) {
             <h1 className="text-3xl font-semibold text-white md:text-4xl">
               {movie.title}
             </h1>
-            <p className="text-sm text-zinc-400">
-              {movie.release_date?.slice(0, 4)} · ★{" "}
-              {movie.vote_average?.toFixed(1)} · {movie.runtime ?? "—"} min
-            </p>
+            <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-zinc-400 md:justify-start">
+              <span>{movie.release_date?.slice(0, 4)}</span>
+              <span>·</span>
+              <span>
+                ★ {movie.vote_average?.toFixed(1)}{" "}
+                <span className="text-zinc-600">
+                  ({movie.vote_count?.toLocaleString()} votes)
+                </span>
+              </span>
+              <span>·</span>
+              <span>{movie.runtime ?? "—"} min</span>
+            </div>
+            {existing?.user_rating ? (
+              <p className="text-sm text-amber-100/80">
+                Your rating:{" "}
+                <span className="font-semibold">{existing.user_rating}/10</span>
+              </p>
+            ) : null}
             <div className="flex flex-wrap justify-center gap-2 md:justify-start">
               {movie.genres.map((g) => (
                 <span
@@ -79,32 +127,27 @@ export default async function MovieDetailPage({ params }: Props) {
           {movie.overview || "No synopsis available."}
         </p>
 
-        <div className="mt-10 flex flex-wrap justify-center gap-3 md:justify-start">
-          <form action={markSeenFromForm}>
-            <input type="hidden" name="tmdbId" value={tmdbId} />
-            <button
-              type="submit"
-              className="rounded-full bg-white/10 px-5 py-2.5 text-sm font-medium text-white hover:bg-white/15"
-            >
-              Mark watched
-            </button>
-          </form>
-          <form action={queueFilmFromForm}>
-            <input type="hidden" name="tmdbId" value={tmdbId} />
-            <button
-              type="submit"
-              className="rounded-full border border-white/15 px-5 py-2.5 text-sm text-zinc-200 hover:border-amber-200/40 hover:text-white"
-            >
-              Add to watchlist
-            </button>
-          </form>
-          <Link
-            href="/recommend"
-            className="rounded-full px-5 py-2.5 text-sm text-zinc-500 hover:text-zinc-300"
-          >
-            Find similar
-          </Link>
-        </div>
+        {existing?.notes ? (
+          <div className="mt-6 rounded-xl border border-white/10 bg-zinc-900/40 px-4 py-3">
+            <p className="text-xs text-zinc-500">Your notes</p>
+            <p className="mt-1 text-sm leading-relaxed text-zinc-300">{existing.notes}</p>
+          </div>
+        ) : null}
+
+        <MovieActions
+          tmdbId={tmdbId}
+          isLoggedIn={!!user}
+          existing={existing}
+        />
+
+        {!user ? (
+          <p className="mt-4 text-center text-xs text-zinc-600 md:text-left">
+            <Link href="/login" className="text-zinc-500 underline-offset-2 hover:underline">
+              Sign in
+            </Link>{" "}
+            to log this film, rate it, and exclude it from future suggestions.
+          </p>
+        ) : null}
       </div>
     </article>
   );

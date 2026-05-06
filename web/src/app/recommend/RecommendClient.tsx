@@ -3,7 +3,7 @@
 import { STORAGE_KEY_LAST_RECOMMENDATION } from "@/config/brand";
 import { TMDB_GENRE_OPTIONS } from "@/config/tmdbGenres";
 import type { RecommendationInput } from "@/features/recommendations/schema";
-import type { RecommendedMovie } from "@/types/movie";
+import type { FinderMeta, RecommendedMovie } from "@/types/movie";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -84,6 +84,7 @@ export function RecommendClient() {
       });
       const data = (await res.json()) as {
         movies?: RecommendedMovie[];
+        finderMeta?: FinderMeta;
         error?: string;
       };
       if (!res.ok) {
@@ -94,7 +95,7 @@ export function RecommendClient() {
       }
       sessionStorage.setItem(
         STORAGE_KEY_LAST_RECOMMENDATION,
-        JSON.stringify({ input: body, movies: data.movies }),
+        JSON.stringify({ input: body, movies: data.movies, finderMeta: data.finderMeta }),
       );
       router.push("/results");
     } catch (err) {

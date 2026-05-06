@@ -7,6 +7,7 @@ const links = [
   { href: "/recommend", label: "Find a film" },
   { href: "/watchlist", label: "Watchlist" },
   { href: "/watched", label: "Watched" },
+  { href: "/feedback", label: "Reviews" },
   { href: "/profile", label: "Preferences" },
 ];
 

@@ -1,4 +1,5 @@
 import { runRecommendationEngine } from "@/features/recommendations/engine";
+import { llmRerank } from "@/features/recommendations/llmRank";
 import { recommendationInputSchema } from "@/features/recommendations/schema";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
@@ -59,7 +60,21 @@ export async function POST(request: Request) {
       excludeTmdb = await loadExcludedTmdbIds(supabase, user.id);
     }
 
-    const movies = await runRecommendationEngine(parsed.data, excludeTmdb);
+    const { movies: candidates, finderMeta } = await runRecommendationEngine(
+      parsed.data,
+      excludeTmdb,
+    );
+
+    // Optional LLM re-ranking — falls back gracefully if key absent or call fails.
+    const { movies, llmSkipped, conflictExplanation } = await llmRerank(
+      candidates,
+      parsed.data,
+    );
+
+    // Merge LLM conflict explanation into finderMeta if present.
+    const mergedFinderMeta = conflictExplanation
+      ? { ...finderMeta, userMessage: conflictExplanation }
+      : finderMeta;
 
     if (user) {
       await supabase.from("recommendation_sessions").insert({
@@ -69,7 +84,12 @@ export async function POST(request: Request) {
       });
     }
 
-    return NextResponse.json({ movies, input: parsed.data });
+    return NextResponse.json({
+      movies,
+      input: parsed.data,
+      finderMeta: mergedFinderMeta,
+      llmSkipped,
+    });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Unknown error";
     const status =

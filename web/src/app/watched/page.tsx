@@ -1,4 +1,5 @@
 import { WatchedAddSearch } from "./WatchedAddSearch";
+import { WatchedEntryActions } from "./WatchedEntryActions";
 import { posterUrl } from "@/lib/tmdb/constants";
 import { createClient } from "@/lib/supabase/server";
 import Image from "next/image";
@@ -13,6 +14,7 @@ type MovieRow = {
   release_year: number | null;
   poster_path: string | null;
   vote_average: number | null;
+  vote_count?: number | null;
 };
 
 export default async function WatchedPage() {
@@ -21,7 +23,7 @@ export default async function WatchedPage() {
   const { data: rows } = await supabase
     .from("watched_movies")
     .select(
-      "watched_at, user_rating, notes, movies ( id, tmdb_id, title, release_year, poster_path, vote_average )",
+      "watched_at, user_rating, notes, movies ( id, tmdb_id, title, release_year, poster_path, vote_average, vote_count )",
     )
     .order("watched_at", { ascending: false });
 
@@ -101,21 +103,24 @@ export default async function WatchedPage() {
                       ? new Date(watched_at).toLocaleDateString()
                       : "—"}
                   </p>
-                  {user_rating != null ? (
-                    <p className="text-xs text-amber-100/80">
-                      Your rating: {user_rating}/10
-                    </p>
-                  ) : null}
                   {movie.vote_average != null ? (
                     <p className="text-xs text-zinc-500">
-                      TMDb: ★ {Number(movie.vote_average).toFixed(1)}
+                      TMDb ★ {Number(movie.vote_average).toFixed(1)}
+                      {movie.vote_count
+                        ? ` · ${movie.vote_count.toLocaleString()} votes`
+                        : ""}
                     </p>
                   ) : null}
                   {notes ? (
-                    <p className="mt-2 line-clamp-2 text-xs text-zinc-400">
-                      {notes}
+                    <p className="mt-1 line-clamp-2 text-xs text-zinc-400 italic">
+                      &ldquo;{notes}&rdquo;
                     </p>
                   ) : null}
+                  <WatchedEntryActions
+                    tmdbId={movie.tmdb_id}
+                    initialRating={user_rating ?? null}
+                    initialNotes={notes ?? null}
+                  />
                 </div>
               </li>
             );

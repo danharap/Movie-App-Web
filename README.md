@@ -74,7 +74,11 @@ Production builds intentionally use **`next build` without `--turbopack`**, beca
 
 - **Anonymous recommendations** — vibes / genres / runtime / era / streaming filters; results stored in `sessionStorage` until refresh.
 - **Signed-in users** — watchlist, watched, dismissed titles stored in Supabase; recommendations exclude watched + dismissed; optional session logging.
-- **TMDb** — all movie calls go through the server (`TMDB_API_KEY` never exposed to the browser).
+- **Movie ratings & notes** — log films with a 1–10 rating and personal notes; inline edit on the watched page and detail page.
+- **App feedback** — authenticated users can submit, edit, and delete a review of Nudge Film itself (`/feedback`); one review per account, public read.
+- **Smarter recommendations** — dual-signal scoring: vibe pool + genre fit. Conflict detection (e.g. funny vibes + horror genres) widens the discover query to bridge genres (horror-comedy) and shows a plain-language explanation in the results.
+- **Optional LLM re-ranking** — set `OPENAI_API_KEY` (server-only) and the engine's candidate list is re-ranked by GPT-4o-mini with per-movie reasons. Gracefully skipped when key absent or call fails.
+- **TMDb** — all movie calls go through the server (`TMDB_API_KEY`/`TMDB_READ_ACCESS_TOKEN` never exposed to the browser).
 
 ## Scripts (from `web/`)
 
