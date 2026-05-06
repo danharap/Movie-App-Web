@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 const publicLinks = [
   { href: "/recommend", label: "Find a film" },
   { href: "/browse", label: "Browse" },
+  { href: "/feedback", label: "Reviews" },
 ];
 
 const authedLinks = [
