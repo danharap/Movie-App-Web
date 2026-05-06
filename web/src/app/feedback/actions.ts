@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { feedbackInputSchema } from "@/features/feedback/schema";
+import { trackServerEvent } from "@/lib/analytics/track";
 import { revalidatePath } from "next/cache";
 
 async function getAuthedUser() {
@@ -54,6 +55,7 @@ export async function upsertAppFeedback(raw: {
     { onConflict: "user_id" },
   );
   if (error) throw new Error(error.message);
+  void trackServerEvent("feedback_submitted", { rating }, user.id);
   revalidatePath("/feedback");
 }
 

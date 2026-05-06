@@ -2,6 +2,7 @@
 
 import { getMovieDetails } from "@/lib/tmdb/client";
 import { createClient } from "@/lib/supabase/server";
+import { trackServerEvent } from "@/lib/analytics/track";
 import { revalidatePath } from "next/cache";
 
 async function ensureMovieRow(tmdbId: number): Promise<number> {
@@ -71,6 +72,7 @@ export async function markWatched(
     console.error("[library] markWatched error:", error.code, error.message);
     throw new Error("Failed to save to diary. Please try again.");
   }
+  void trackServerEvent("movie_watched", { tmdbId, rating: rating ?? null }, user.id);
   revalidatePath("/watched");
   revalidatePath("/watchlist");
   revalidatePath("/results");
@@ -120,6 +122,7 @@ export async function addToWatchlist(tmdbId: number) {
     console.error("[library] addToWatchlist error:", error.code, error.message);
     throw new Error("Failed to add to watchlist.");
   }
+  void trackServerEvent("watchlist_add", { tmdbId }, user.id);
   revalidatePath("/watchlist");
 }
 
