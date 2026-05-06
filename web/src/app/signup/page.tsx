@@ -12,12 +12,12 @@ export default async function SignupPage({ searchParams }: Props) {
       <h1 className="text-2xl font-semibold text-white">Sign up</h1>
       <p className="mt-2 text-sm text-zinc-500">
         Already have an account?{" "}
-        <Link href="/login" className="text-amber-200 hover:text-amber-100">
+        <Link href="/login" className="text-indigo-300 hover:text-indigo-200">
           Log in
         </Link>
       </p>
       {q.message === "check_email" ? (
-        <p className="mt-4 rounded-lg border border-amber-200/30 bg-amber-200/10 px-3 py-2 text-sm text-amber-100">
+        <p className="mt-4 rounded-lg border border-indigo-400/25 bg-indigo-400/10 px-3 py-2 text-sm text-indigo-200">
           Check your inbox to confirm your email, then come back to log in.
         </p>
       ) : null}
@@ -35,7 +35,7 @@ export default async function SignupPage({ searchParams }: Props) {
             id="displayName"
             name="displayName"
             type="text"
-            className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-amber-200/30"
+            className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-indigo-400/25"
           />
         </div>
         <div className="space-y-2">
@@ -48,7 +48,7 @@ export default async function SignupPage({ searchParams }: Props) {
             type="email"
             required
             autoComplete="email"
-            className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-amber-200/30"
+            className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-indigo-400/25"
           />
         </div>
         <div className="space-y-2">
@@ -62,12 +62,12 @@ export default async function SignupPage({ searchParams }: Props) {
             required
             minLength={6}
             autoComplete="new-password"
-            className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-amber-200/30"
+            className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-indigo-400/25"
           />
         </div>
         <button
           type="submit"
-          className="w-full rounded-xl bg-amber-200/90 py-3 text-sm font-semibold text-zinc-950 hover:bg-amber-200"
+          className="w-full rounded-xl bg-indigo-500 py-3 text-sm font-semibold text-white hover:bg-indigo-300"
         >
           Create account
         </button>

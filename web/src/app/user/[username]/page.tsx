@@ -339,7 +339,7 @@ export default async function PublicProfilePage({
                     ) : null}
                   </Link>
                   {user_rating != null ? (
-                    <span className="absolute bottom-1 right-1 rounded bg-black/80 px-1 py-0.5 text-[9px] font-semibold text-amber-200 ring-1 ring-white/10">
+                    <span className="absolute bottom-1 right-1 rounded bg-black/80 px-1 py-0.5 text-[9px] font-semibold text-indigo-300 ring-1 ring-white/10">
                       {user_rating}
                     </span>
                   ) : null}

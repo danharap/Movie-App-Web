@@ -53,7 +53,7 @@ export function EditProfileForm({
       <button
         type="button"
         onClick={() => { setOpen(true); setSuccess(false); setError(null); }}
-        className="rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs text-zinc-300 transition hover:border-amber-200/30 hover:text-white"
+        className="rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs text-zinc-300 transition hover:border-indigo-400/25 hover:text-white"
       >
         Edit profile
       </button>
@@ -81,7 +81,7 @@ export function EditProfileForm({
               onChange={(e) => setUsernameVal(e.target.value.toLowerCase())}
               placeholder="your_username"
               maxLength={24}
-              className="flex-1 rounded-r-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none placeholder:text-zinc-600 focus:ring-2 focus:ring-amber-200/30"
+              className="flex-1 rounded-r-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none placeholder:text-zinc-600 focus:ring-2 focus:ring-indigo-400/25"
             />
           </div>
         </div>
@@ -95,7 +95,7 @@ export function EditProfileForm({
             onChange={(e) => setDisplayNameVal(e.target.value)}
             placeholder="Your name"
             maxLength={50}
-            className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none placeholder:text-zinc-600 focus:ring-2 focus:ring-amber-200/30"
+            className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none placeholder:text-zinc-600 focus:ring-2 focus:ring-indigo-400/25"
           />
         </div>
 
@@ -110,7 +110,7 @@ export function EditProfileForm({
             placeholder="A few words about your movie taste…"
             maxLength={160}
             rows={2}
-            className="w-full resize-none rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none placeholder:text-zinc-600 focus:ring-2 focus:ring-amber-200/30"
+            className="w-full resize-none rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none placeholder:text-zinc-600 focus:ring-2 focus:ring-indigo-400/25"
           />
         </div>
 
@@ -123,8 +123,8 @@ export function EditProfileForm({
                 onChange={(e) => setIsPublicVal(e.target.checked)}
                 className="peer sr-only"
               />
-              <span className="h-5 w-9 rounded-full border border-white/10 bg-zinc-800 peer-checked:border-amber-200/30 peer-checked:bg-amber-200/20 transition" />
-              <span className="absolute left-0.5 h-4 w-4 rounded-full bg-zinc-600 transition peer-checked:translate-x-4 peer-checked:bg-amber-200" />
+              <span className="h-5 w-9 rounded-full border border-white/10 bg-zinc-800 peer-checked:border-indigo-400/25 peer-checked:bg-indigo-400/20 transition" />
+              <span className="absolute left-0.5 h-4 w-4 rounded-full bg-zinc-600 transition peer-checked:translate-x-4 peer-checked:bg-indigo-300" />
             </span>
             <span className="text-xs text-zinc-300">Public profile</span>
           </label>
@@ -137,8 +137,8 @@ export function EditProfileForm({
                 onChange={(e) => setWatchlistPublicVal(e.target.checked)}
                 className="peer sr-only"
               />
-              <span className="h-5 w-9 rounded-full border border-white/10 bg-zinc-800 peer-checked:border-amber-200/30 peer-checked:bg-amber-200/20 transition" />
-              <span className="absolute left-0.5 h-4 w-4 rounded-full bg-zinc-600 transition peer-checked:translate-x-4 peer-checked:bg-amber-200" />
+              <span className="h-5 w-9 rounded-full border border-white/10 bg-zinc-800 peer-checked:border-indigo-400/25 peer-checked:bg-indigo-400/20 transition" />
+              <span className="absolute left-0.5 h-4 w-4 rounded-full bg-zinc-600 transition peer-checked:translate-x-4 peer-checked:bg-indigo-300" />
             </span>
             <span className="text-xs text-zinc-300">Public watchlist</span>
           </label>
@@ -156,7 +156,7 @@ export function EditProfileForm({
           type="button"
           disabled={isPending}
           onClick={save}
-          className="rounded-full bg-amber-200/90 px-5 py-2 text-xs font-semibold text-zinc-950 transition hover:bg-amber-200 disabled:opacity-50"
+          className="rounded-full bg-indigo-500 px-5 py-2 text-xs font-semibold text-white transition hover:bg-indigo-300 disabled:opacity-50"
         >
           {isPending ? "Saving…" : "Save"}
         </button>
@@ -170,7 +170,7 @@ export function EditProfileForm({
       </div>
 
       {success ? (
-        <p className="text-xs text-amber-200/80">Profile saved.</p>
+        <p className="text-xs text-indigo-300/80">Profile saved.</p>
       ) : null}
     </div>
   );

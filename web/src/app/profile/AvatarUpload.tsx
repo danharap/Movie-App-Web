@@ -146,7 +146,7 @@ export function AvatarUpload({
           type="button"
           disabled={isPending}
           onClick={() => inputRef.current?.click()}
-          className="group relative h-20 w-20 overflow-hidden rounded-full bg-zinc-800 ring-2 ring-white/10 transition hover:ring-amber-200/40 disabled:opacity-60"
+          className="group relative h-20 w-20 overflow-hidden rounded-full bg-zinc-800 ring-2 ring-white/10 transition hover:ring-indigo-400/30 disabled:opacity-60"
           aria-label="Change avatar"
         >
           {liveUrl ? (
@@ -159,7 +159,7 @@ export function AvatarUpload({
               unoptimized
             />
           ) : (
-            <span className="flex h-full w-full items-center justify-center text-2xl font-bold text-amber-200 select-none">
+            <span className="flex h-full w-full items-center justify-center text-2xl font-bold text-indigo-300 select-none">
               {displayName.slice(0, 1).toUpperCase()}
             </span>
           )}
@@ -207,7 +207,7 @@ export function AvatarUpload({
             <h2 className="text-sm font-semibold text-white">Crop photo</h2>
             <button
               onClick={confirmCrop}
-              className="flex items-center gap-1.5 rounded-full bg-amber-200/90 px-4 py-1.5 text-sm font-semibold text-zinc-950 hover:bg-amber-200 transition"
+              className="flex items-center gap-1.5 rounded-full bg-indigo-500 px-4 py-1.5 text-sm font-semibold text-white hover:bg-indigo-300 transition"
             >
               <Check className="h-4 w-4" />
               Save
@@ -247,7 +247,7 @@ export function AvatarUpload({
               step={0.05}
               value={zoom}
               onChange={(e) => setZoom(Number(e.target.value))}
-              className="w-48 accent-amber-300"
+              className="w-48 accent-indigo-400"
               aria-label="Zoom"
             />
             <button

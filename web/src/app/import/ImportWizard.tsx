@@ -114,15 +114,15 @@ export function ImportWizard() {
     <div className="flex min-h-[calc(100vh-4rem)] flex-col">
       {/* Resume banner */}
       {resumeBanner && (
-        <div className="sticky top-0 z-10 border-b border-amber-300/20 bg-amber-300/10 px-4 py-3">
+        <div className="sticky top-0 z-10 border-b border-indigo-400/15 bg-indigo-500/10 px-4 py-3">
           <div className="mx-auto flex max-w-xl items-center justify-between gap-4">
-            <p className="text-sm text-amber-200">
+            <p className="text-sm text-indigo-300">
               You have an unfinished import. Want to pick up where you left off?
             </p>
             <div className="flex shrink-0 gap-2">
               <button
                 onClick={handleResume}
-                className="rounded-full bg-amber-300/20 px-3 py-1 text-xs font-medium text-amber-200 hover:bg-amber-300/30 transition"
+                className="rounded-full bg-indigo-500/15 px-3 py-1 text-xs font-medium text-indigo-300 hover:bg-indigo-400/30 transition"
               >
                 Resume
               </button>
@@ -149,7 +149,7 @@ export function ImportWizard() {
                   <div
                     className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition ${
                       active
-                        ? "bg-amber-300/15 text-amber-300"
+                        ? "bg-indigo-400/15 text-indigo-400"
                         : done
                           ? "text-zinc-500"
                           : "text-zinc-700"
@@ -158,7 +158,7 @@ export function ImportWizard() {
                     <span
                       className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold ${
                         active
-                          ? "bg-amber-300 text-zinc-900"
+                          ? "bg-indigo-400 text-zinc-900"
                           : done
                             ? "bg-zinc-700 text-zinc-400"
                             : "bg-zinc-800 text-zinc-600"

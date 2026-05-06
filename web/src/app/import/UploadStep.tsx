@@ -177,7 +177,7 @@ export function UploadStep({ onParsed }: UploadStepProps) {
         onDrop={handleDrop}
         className={`relative flex flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed p-10 transition-all ${
           dragOver
-            ? "border-amber-300/60 bg-amber-300/5"
+            ? "border-amber-300/60 bg-indigo-400/5"
             : "border-white/15 bg-white/5"
         }`}
       >
@@ -202,7 +202,7 @@ export function UploadStep({ onParsed }: UploadStepProps) {
 
         {status === "parsing" ? (
           <>
-            <Loader2 className="h-10 w-10 animate-spin text-amber-300" />
+            <Loader2 className="h-10 w-10 animate-spin text-indigo-400" />
             <p className="text-sm text-zinc-300">Parsing your export…</p>
           </>
         ) : (
@@ -226,7 +226,7 @@ export function UploadStep({ onParsed }: UploadStepProps) {
               <button
                 type="button"
                 onClick={() => folderInputRef.current?.click()}
-                className="flex items-center gap-1.5 rounded-full bg-amber-300/10 px-4 py-2 text-xs font-medium text-amber-300 transition hover:bg-amber-300/20"
+                className="flex items-center gap-1.5 rounded-full bg-indigo-500/10 px-4 py-2 text-xs font-medium text-indigo-400 transition hover:bg-indigo-500/15"
               >
                 <Folder className="h-3.5 w-3.5" />
                 Select extracted folder
@@ -246,7 +246,7 @@ export function UploadStep({ onParsed }: UploadStepProps) {
             >
               <div className="flex items-center gap-2.5">
                 {file.name.endsWith(".zip") ? (
-                  <FileArchive className="h-4 w-4 text-amber-300" />
+                  <FileArchive className="h-4 w-4 text-indigo-400" />
                 ) : (
                   <FileText className="h-4 w-4 text-zinc-400" />
                 )}

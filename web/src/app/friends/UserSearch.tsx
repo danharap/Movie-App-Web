@@ -61,7 +61,7 @@ export function UserSearch() {
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search by username…"
         autoComplete="off"
-        className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:ring-2 focus:ring-amber-200/30"
+        className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:ring-2 focus:ring-indigo-400/25"
       />
       {error ? <p className="text-xs text-red-300/80">{error}</p> : null}
       {loading ? <p className="text-xs text-zinc-500">Searching…</p> : null}
@@ -80,7 +80,7 @@ export function UserSearch() {
                 <div className="min-w-0 flex-1">
                   <Link
                     href={`/user/${u.username ?? u.id}`}
-                    className="block truncate text-sm font-medium text-white hover:text-amber-100"
+                    className="block truncate text-sm font-medium text-white hover:text-indigo-200"
                   >
                     {name}
                   </Link>

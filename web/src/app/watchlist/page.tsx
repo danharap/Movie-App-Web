@@ -50,7 +50,7 @@ export default async function WatchlistPage() {
           <p className="text-zinc-400">Nothing saved yet.</p>
           <Link
             href="/recommend"
-            className="mt-6 inline-block text-sm font-medium text-amber-200 hover:text-amber-100"
+            className="mt-6 inline-block text-sm font-medium text-indigo-300 hover:text-indigo-200"
           >
             Find something to queue →
           </Link>
@@ -81,7 +81,7 @@ export default async function WatchlistPage() {
                 <div className="min-w-0 flex-1">
                   <Link
                     href={`/movie/${movie.tmdb_id}`}
-                    className="font-medium text-white hover:text-amber-100"
+                    className="font-medium text-white hover:text-indigo-200"
                   >
                     {movie.title}
                   </Link>
@@ -89,7 +89,7 @@ export default async function WatchlistPage() {
                     <p className="text-xs text-zinc-500">{movie.release_year}</p>
                   ) : null}
                   {movie.vote_average != null ? (
-                    <p className="text-xs text-amber-100/80">
+                    <p className="text-xs text-indigo-200/80">
                       ★ {Number(movie.vote_average).toFixed(1)}
                     </p>
                   ) : null}

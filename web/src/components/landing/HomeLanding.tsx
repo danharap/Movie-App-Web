@@ -9,7 +9,7 @@ import Link from "next/link";
 
 function IconSpark() {
   return (
-    <svg className="size-5 text-amber-200/90" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg className="size-5 text-indigo-300/90" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path d="M12 2l1.2 4.2L18 8l-4.8 1.8L12 14l-1.2-4.2L6 8l4.8-1.8L12 2z" fill="currentColor" opacity={0.9} />
       <path d="M19 14l.6 2.1L22 17l-2.4.9L19 20l-.6-2.1L16 17l2.4-.9L19 14z" fill="currentColor" opacity={0.5} />
     </svg>
@@ -18,7 +18,7 @@ function IconSpark() {
 
 function IconList() {
   return (
-    <svg className="size-5 text-amber-200/90" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg className="size-5 text-indigo-300/90" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" stroke="currentColor" strokeWidth={2} strokeLinecap="round" />
     </svg>
   );
@@ -26,7 +26,7 @@ function IconList() {
 
 function IconBookmark() {
   return (
-    <svg className="size-5 text-amber-200/90" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg className="size-5 text-indigo-300/90" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path d="M6 4h12v16l-6-3-6 3V4z" stroke="currentColor" strokeWidth={2} strokeLinejoin="round" />
     </svg>
   );
@@ -57,7 +57,7 @@ function Stars({ rating, size = "sm" }: { rating: number; size?: "sm" | "lg" }) 
   return (
     <span className={`flex gap-0.5 ${cls}`} aria-label={`${rating} out of 5 stars`}>
       {[1, 2, 3, 4, 5].map((s) => (
-        <span key={s} className={s <= rating ? "text-amber-300" : "text-zinc-700"}>★</span>
+        <span key={s} className={s <= rating ? "text-indigo-300" : "text-zinc-700"}>★</span>
       ))}
     </span>
   );
@@ -71,7 +71,7 @@ function Initials({ name }: { name: string }) {
     .slice(0, 2)
     .toUpperCase();
   return (
-    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-200/10 text-xs font-bold text-amber-200 select-none">
+    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-400/10 text-xs font-bold text-indigo-300 select-none">
       {init}
     </div>
   );
@@ -86,7 +86,6 @@ function formatDate(iso: string) {
 // ---------------------------------------------------------------------------
 
 export async function HomeLanding() {
-  // Fetch reviews + auth in parallel
   const [reviews, supabase] = await Promise.all([
     listFeedback(1),
     createClient(),
@@ -105,20 +104,20 @@ export async function HomeLanding() {
     <div className="relative">
       {/* Background blobs */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute -left-1/4 top-0 h-[520px] w-[70%] rounded-full bg-amber-400/[0.07] blur-3xl" />
+        <div className="absolute -left-1/4 top-0 h-[520px] w-[70%] rounded-full bg-indigo-500/[0.08] blur-3xl" />
         <div className="absolute -right-1/4 top-32 h-[420px] w-[60%] rounded-full bg-violet-500/[0.06] blur-3xl" />
-        <div className="absolute bottom-0 left-1/3 h-px w-1/3 bg-gradient-to-r from-transparent via-amber-200/20 to-transparent" />
+        <div className="absolute bottom-0 left-1/3 h-px w-1/3 bg-gradient-to-r from-transparent via-indigo-300/20 to-transparent" />
       </div>
 
       {/* ── Hero ── */}
       <section className="mx-auto max-w-6xl px-4 pb-20 pt-14 sm:px-6 sm:pt-20 lg:pt-28">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="reveal inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-xs font-medium uppercase tracking-[0.2em] text-amber-200/85">
+          <p className="reveal inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-1.5 text-xs font-medium uppercase tracking-[0.2em] text-indigo-300/85">
             {APP_NAME}
           </p>
           <h1 className="reveal mt-8 text-4xl font-semibold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl">
             A calmer way to{" "}
-            <span className="bg-gradient-to-r from-amber-100 via-amber-200 to-amber-100 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-indigo-200 via-indigo-300 to-violet-300 bg-clip-text text-transparent">
               choose a film
             </span>
           </h1>
@@ -129,13 +128,13 @@ export async function HomeLanding() {
           <div className="reveal mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
             <Link
               href="/recommend"
-              className="inline-flex w-full min-w-[200px] items-center justify-center rounded-2xl bg-gradient-to-r from-amber-200 via-amber-100 to-amber-200 px-8 py-4 text-base font-semibold text-zinc-950 shadow-lg shadow-amber-950/30 transition hover:brightness-[1.03] sm:w-auto"
+              className="inline-flex w-full min-w-[200px] items-center justify-center rounded-2xl bg-indigo-500 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-indigo-950/50 transition hover:bg-indigo-400 sm:w-auto"
             >
               Start picking
             </Link>
             <Link
               href="/login"
-              className="inline-flex w-full min-w-[200px] items-center justify-center rounded-2xl border border-white/15 bg-white/[0.03] px-8 py-4 text-base font-medium text-zinc-100 backdrop-blur-sm transition hover:border-amber-200/35 hover:bg-white/[0.06] sm:w-auto"
+              className="inline-flex w-full min-w-[200px] items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] px-8 py-4 text-base font-medium text-zinc-100 backdrop-blur-sm transition hover:border-indigo-400/25 hover:bg-white/[0.05] sm:w-auto"
             >
               Sign in to save lists
             </Link>
@@ -149,10 +148,10 @@ export async function HomeLanding() {
           {steps.map((s, i) => (
             <div
               key={s.n}
-              className="rounded-2xl border border-white/[0.08] bg-zinc-950/40 p-6 text-left backdrop-blur-md"
+              className="rounded-2xl border border-white/[0.07] bg-zinc-950/50 p-6 text-left backdrop-blur-md"
               style={{ animationDelay: `${0.05 * (i + 1)}s` }}
             >
-              <span className="font-mono text-xs text-amber-200/50">{s.n}</span>
+              <span className="font-mono text-xs text-indigo-300/50">{s.n}</span>
               <h2 className="mt-3 text-sm font-semibold text-white">{s.title}</h2>
               <p className="mt-2 text-sm leading-relaxed text-zinc-500">{s.body}</p>
             </div>
@@ -161,10 +160,10 @@ export async function HomeLanding() {
       </section>
 
       {/* ── Why it's different ── */}
-      <section className="border-y border-white/[0.06] bg-black/20 py-20 sm:py-24">
+      <section className="border-y border-white/[0.05] bg-black/20 py-20 sm:py-24">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-200/75">Why it feels different</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-300/75">Why it feels different</h2>
             <p className="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
               Built like a product, not a weekend demo
             </p>
@@ -173,10 +172,10 @@ export async function HomeLanding() {
             {pillars.map((p, i) => (
               <li
                 key={p.title}
-                className="reveal flex flex-col rounded-2xl border border-white/[0.08] bg-gradient-to-b from-zinc-900/80 to-zinc-950/80 p-6"
+                className="reveal flex flex-col rounded-2xl border border-white/[0.07] bg-gradient-to-b from-zinc-900/80 to-zinc-950/80 p-6"
                 style={{ animationDelay: `${0.08 * i}s` }}
               >
-                <div className="flex size-10 items-center justify-center rounded-xl border border-amber-200/15 bg-amber-200/5">
+                <div className="flex size-10 items-center justify-center rounded-xl border border-indigo-400/15 bg-indigo-400/5">
                   {p.icon}
                 </div>
                 <h3 className="mt-5 text-base font-semibold text-white">{p.title}</h3>
@@ -192,7 +191,7 @@ export async function HomeLanding() {
         {/* Header row */}
         <div className="mb-12 flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-200/70">Reviews</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-300/70">Reviews</p>
             <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
               What people are saying
             </h2>
@@ -200,7 +199,7 @@ export async function HomeLanding() {
 
           {/* Aggregate score */}
           {avgRating !== null && reviews.length > 0 ? (
-            <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-3">
+            <div className="flex items-center gap-4 rounded-2xl border border-white/[0.08] bg-white/[0.02] px-5 py-3">
               <div className="text-center">
                 <p className="text-3xl font-bold text-white">{avgRating.toFixed(1)}</p>
                 <Stars rating={Math.round(avgRating)} size="sm" />
@@ -218,7 +217,7 @@ export async function HomeLanding() {
             {preview.map((r) => (
               <div
                 key={r.id}
-                className="reveal flex flex-col gap-4 rounded-2xl border border-white/[0.08] bg-zinc-900/50 p-5"
+                className="reveal flex flex-col gap-4 rounded-2xl border border-white/[0.07] bg-zinc-900/50 p-5"
               >
                 <div className="flex items-center gap-3">
                   <Initials name={r.reviewer_display_name} />
@@ -237,7 +236,7 @@ export async function HomeLanding() {
             ))}
           </div>
         ) : (
-          <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] px-6 py-14 text-center">
+          <div className="rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02] px-6 py-14 text-center">
             <p className="text-sm text-zinc-500">No reviews yet — you could be the first.</p>
           </div>
         )}
@@ -248,14 +247,14 @@ export async function HomeLanding() {
             hasReviewed ? (
               <Link
                 href="/feedback"
-                className="rounded-full border border-white/15 px-6 py-2.5 text-sm text-zinc-300 transition hover:border-white/30 hover:text-white"
+                className="rounded-full border border-white/10 px-6 py-2.5 text-sm text-zinc-300 transition hover:border-white/25 hover:text-white"
               >
                 Edit your review →
               </Link>
             ) : (
               <Link
                 href="/feedback"
-                className="rounded-full bg-amber-200/90 px-6 py-2.5 text-sm font-semibold text-zinc-950 transition hover:bg-amber-200"
+                className="rounded-full bg-indigo-500 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-400"
               >
                 Leave a review ★
               </Link>
@@ -263,7 +262,7 @@ export async function HomeLanding() {
           ) : (
             <Link
               href="/login?redirect=/feedback"
-              className="rounded-full bg-amber-200/90 px-6 py-2.5 text-sm font-semibold text-zinc-950 transition hover:bg-amber-200"
+              className="rounded-full bg-indigo-500 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-400"
             >
               Sign in to leave a review ★
             </Link>
@@ -271,7 +270,7 @@ export async function HomeLanding() {
           {reviews.length > 3 && (
             <Link
               href="/feedback"
-              className="text-sm text-zinc-500 hover:text-zinc-300 transition"
+              className="text-sm text-zinc-500 transition hover:text-zinc-300"
             >
               See all {reviews.length} reviews →
             </Link>
@@ -280,7 +279,7 @@ export async function HomeLanding() {
       </section>
 
       {/* ── Final CTA ── */}
-      <section className="border-t border-white/[0.06] bg-gradient-to-b from-zinc-950/80 to-black/80 px-4 py-16 sm:px-6 sm:py-20">
+      <section className="border-t border-white/[0.05] bg-gradient-to-b from-zinc-950/80 to-black/80 px-4 py-16 sm:px-6 sm:py-20">
         <div className="mx-auto flex max-w-4xl flex-col items-center justify-between gap-8 text-center sm:flex-row sm:text-left">
           <div>
             <h2 className="text-2xl font-semibold text-white sm:text-3xl">Ready when you are</h2>
@@ -290,7 +289,7 @@ export async function HomeLanding() {
           </div>
           <Link
             href="/recommend"
-            className="shrink-0 rounded-2xl bg-amber-200/90 px-10 py-4 text-base font-semibold text-zinc-950 transition hover:bg-amber-200"
+            className="shrink-0 rounded-2xl bg-indigo-500 px-10 py-4 text-base font-semibold text-white shadow-lg shadow-indigo-950/40 transition hover:bg-indigo-400"
           >
             Find a film
           </Link>

@@ -75,7 +75,7 @@ export function OnboardingWizard({ displayName }: { displayName: string }) {
         </div>
         <button
           onClick={() => setStep("referral")}
-          className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-amber-200/90 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-amber-200"
+          className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-500 py-3 text-sm font-semibold text-white transition hover:bg-indigo-300"
         >
           Let&apos;s go <ChevronRight className="h-4 w-4" />
         </button>
@@ -88,7 +88,7 @@ export function OnboardingWizard({ displayName }: { displayName: string }) {
     return (
       <WizardCard progress={1 / 3}>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-amber-200/60">
+          <p className="text-xs font-semibold uppercase tracking-widest text-indigo-300/60">
             Quick question
           </p>
           <h2 className="mt-2 text-xl font-semibold text-white">
@@ -104,7 +104,7 @@ export function OnboardingWizard({ displayName }: { displayName: string }) {
               onClick={() => setReferral(opt.id)}
               className={`rounded-xl border px-4 py-3 text-sm font-medium transition ${
                 referral === opt.id
-                  ? "border-amber-300/40 bg-amber-200/10 text-amber-100"
+                  ? "border-indigo-400/30 bg-indigo-400/10 text-indigo-200"
                   : "border-white/10 text-zinc-400 hover:border-white/20 hover:text-zinc-200"
               }`}
             >
@@ -116,7 +116,7 @@ export function OnboardingWizard({ displayName }: { displayName: string }) {
         <div className="mt-6 flex gap-3">
           <button
             onClick={() => setStep("letterboxd")}
-            className="flex-1 rounded-xl bg-amber-200/90 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-amber-200"
+            className="flex-1 rounded-xl bg-indigo-500 py-3 text-sm font-semibold text-white transition hover:bg-indigo-300"
           >
             Next
           </button>
@@ -136,7 +136,7 @@ export function OnboardingWizard({ displayName }: { displayName: string }) {
     return (
       <WizardCard progress={2 / 3}>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-amber-200/60">
+          <p className="text-xs font-semibold uppercase tracking-widest text-indigo-300/60">
             Import
           </p>
           <h2 className="mt-2 text-xl font-semibold text-white">
@@ -151,10 +151,10 @@ export function OnboardingWizard({ displayName }: { displayName: string }) {
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           <button
             onClick={() => setStep("letterboxd-guide")}
-            className="flex flex-col items-center gap-2 rounded-xl border border-amber-300/20 bg-amber-200/8 px-5 py-5 text-sm transition hover:bg-amber-200/12"
+            className="flex flex-col items-center gap-2 rounded-xl border border-indigo-400/15 bg-indigo-300/8 px-5 py-5 text-sm transition hover:bg-indigo-300/12"
           >
             <span className="text-2xl">✓</span>
-            <span className="font-semibold text-amber-100">Yes, I have Letterboxd</span>
+            <span className="font-semibold text-indigo-200">Yes, I have Letterboxd</span>
             <span className="text-xs text-zinc-500">I want to import my films</span>
           </button>
 
@@ -176,7 +176,7 @@ export function OnboardingWizard({ displayName }: { displayName: string }) {
     return (
       <WizardCard progress={3 / 3}>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-amber-200/60">
+          <p className="text-xs font-semibold uppercase tracking-widest text-indigo-300/60">
             Almost there
           </p>
           <h2 className="mt-2 text-xl font-semibold text-white">
@@ -191,7 +191,7 @@ export function OnboardingWizard({ displayName }: { displayName: string }) {
         <ol className="mt-6 space-y-3">
           {LETTERBOXD_STEPS.map((s) => (
             <li key={s.n} className="flex gap-3">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-200/15 text-xs font-bold text-amber-300">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-400/15 text-xs font-bold text-indigo-400">
                 {s.n}
               </span>
               <span className="text-sm leading-relaxed text-zinc-400">{s.text}</span>
@@ -213,7 +213,7 @@ export function OnboardingWizard({ displayName }: { displayName: string }) {
         <div className="mt-5 flex flex-col gap-3">
           <button
             onClick={goToImport}
-            className="flex items-center justify-center gap-2 rounded-xl bg-amber-200/90 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-amber-200"
+            className="flex items-center justify-center gap-2 rounded-xl bg-indigo-500 py-3 text-sm font-semibold text-white transition hover:bg-indigo-300"
           >
             <Download className="h-4 w-4" />
             I have my file — import now
@@ -242,7 +242,7 @@ export function OnboardingWizard({ displayName }: { displayName: string }) {
       </div>
       <button
         onClick={goToApp}
-        className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-amber-200/90 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-amber-200"
+        className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-500 py-3 text-sm font-semibold text-white transition hover:bg-indigo-300"
       >
         Find a film <ChevronRight className="h-4 w-4" />
       </button>
@@ -267,7 +267,7 @@ function WizardCard({
       {progress !== undefined && (
         <div className="mb-6 h-1 w-full overflow-hidden rounded-full bg-white/10">
           <div
-            className="h-full rounded-full bg-amber-300 transition-all duration-500"
+            className="h-full rounded-full bg-indigo-400 transition-all duration-500"
             style={{ width: `${progress * 100}%` }}
           />
         </div>

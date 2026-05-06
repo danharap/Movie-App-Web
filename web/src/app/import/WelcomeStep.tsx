@@ -10,7 +10,7 @@ interface WelcomeStepProps {
 const slides = [
   {
     id: "what",
-    icon: <Film className="h-8 w-8 text-amber-300" />,
+    icon: <Film className="h-8 w-8 text-indigo-400" />,
     title: "Bring your movie history with you",
     body: (
       <p className="text-zinc-300 leading-relaxed">
@@ -22,12 +22,12 @@ const slides = [
   },
   {
     id: "how-to-export",
-    icon: <Download className="h-8 w-8 text-amber-300" />,
+    icon: <Download className="h-8 w-8 text-indigo-400" />,
     title: "How to export your Letterboxd data",
     body: (
       <ol className="space-y-3 text-zinc-300">
         <li className="flex gap-3">
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-200/20 text-xs font-bold text-amber-300">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-400/20 text-xs font-bold text-indigo-400">
             1
           </span>
           <span>
@@ -36,7 +36,7 @@ const slides = [
           </span>
         </li>
         <li className="flex gap-3">
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-200/20 text-xs font-bold text-amber-300">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-400/20 text-xs font-bold text-indigo-400">
             2
           </span>
           <span>
@@ -44,7 +44,7 @@ const slides = [
           </span>
         </li>
         <li className="flex gap-3">
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-200/20 text-xs font-bold text-amber-300">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-400/20 text-xs font-bold text-indigo-400">
             3
           </span>
           <span>
@@ -52,7 +52,7 @@ const slides = [
           </span>
         </li>
         <li className="flex gap-3">
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-200/20 text-xs font-bold text-amber-300">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-400/20 text-xs font-bold text-indigo-400">
             4
           </span>
           <span>
@@ -62,7 +62,7 @@ const slides = [
           </span>
         </li>
         <li className="flex gap-3">
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-200/20 text-xs font-bold text-amber-300">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-400/20 text-xs font-bold text-indigo-400">
             5
           </span>
           <span>
@@ -75,33 +75,33 @@ const slides = [
   },
   {
     id: "what-imports",
-    icon: <List className="h-8 w-8 text-amber-300" />,
+    icon: <List className="h-8 w-8 text-indigo-400" />,
     title: "What gets imported",
     body: (
       <div className="space-y-3">
         {[
           {
-            icon: <Film className="h-4 w-4 text-amber-300" />,
+            icon: <Film className="h-4 w-4 text-indigo-400" />,
             label: "Watch history",
             desc: "Every film you marked as watched, with the date you watched it.",
           },
           {
-            icon: <Star className="h-4 w-4 text-amber-300" />,
+            icon: <Star className="h-4 w-4 text-indigo-400" />,
             label: "Ratings",
             desc: "Half-star ratings (0.5–5.0) are preserved exactly.",
           },
           {
-            icon: <BookOpen className="h-4 w-4 text-amber-300" />,
+            icon: <BookOpen className="h-4 w-4 text-indigo-400" />,
             label: "Reviews & notes",
             desc: "Your written reviews come across as notes on each film.",
           },
           {
-            icon: <List className="h-4 w-4 text-amber-300" />,
+            icon: <List className="h-4 w-4 text-indigo-400" />,
             label: "Watchlist",
             desc: "Films you wanted to see are added to your watchlist here.",
           },
           {
-            icon: <Heart className="h-4 w-4 text-amber-300" />,
+            icon: <Heart className="h-4 w-4 text-indigo-400" />,
             label: "Liked films",
             desc: "Shown in your import summary — great for setting favourites.",
           },
@@ -119,7 +119,7 @@ const slides = [
   },
   {
     id: "matching",
-    icon: <Star className="h-8 w-8 text-amber-300" />,
+    icon: <Star className="h-8 w-8 text-indigo-400" />,
     title: "How movie matching works",
     body: (
       <div className="space-y-4 text-zinc-300">
@@ -138,7 +138,7 @@ const slides = [
           <div className="flex items-start gap-2 rounded-lg bg-amber-500/10 p-3 text-sm">
             <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-amber-400" />
             <span>
-              <strong className="text-amber-300">Close match</strong> — title matches but year
+              <strong className="text-indigo-400">Close match</strong> — title matches but year
               is off by one (common with international releases). You&apos;ll confirm these.
             </span>
           </div>
@@ -173,7 +173,7 @@ export function WelcomeStep({ onContinue }: WelcomeStepProps) {
             key={s.id}
             onClick={() => setSlide(i)}
             className={`h-2 rounded-full transition-all ${
-              i === slide ? "w-6 bg-amber-300" : "w-2 bg-white/20 hover:bg-white/30"
+              i === slide ? "w-6 bg-indigo-400" : "w-2 bg-white/20 hover:bg-white/30"
             }`}
             aria-label={`Go to slide ${i + 1}`}
           />
@@ -203,7 +203,7 @@ export function WelcomeStep({ onContinue }: WelcomeStepProps) {
         {isLast ? (
           <button
             onClick={onContinue}
-            className="flex-1 rounded-full bg-amber-200/90 px-6 py-2.5 text-sm font-semibold text-zinc-950 transition hover:bg-amber-200 sm:flex-none"
+            className="flex-1 rounded-full bg-indigo-500 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-300 sm:flex-none"
           >
             Start import →
           </button>

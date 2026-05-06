@@ -131,7 +131,7 @@ function MoviePicker({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search your films…"
-          className="ml-auto w-52 rounded-full border border-white/10 bg-zinc-800 px-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-amber-400/50"
+          className="ml-auto w-52 rounded-full border border-white/10 bg-zinc-800 px-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-indigo-400/30"
         />
       </div>
 
@@ -153,7 +153,7 @@ function MoviePicker({
                   className={`group relative aspect-[2/3] overflow-hidden rounded-lg transition ${
                     inList
                       ? "cursor-default opacity-35"
-                      : "hover:ring-2 hover:ring-amber-300"
+                      : "hover:ring-2 hover:ring-indigo-400"
                   }`}
                 >
                   <div className="relative h-full w-full bg-zinc-800">
@@ -218,7 +218,7 @@ function ListForm({
         placeholder="List name…"
         maxLength={60}
         autoFocus
-        className="w-full rounded-xl border border-white/10 bg-zinc-800 px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-amber-400/50"
+        className="w-full rounded-xl border border-white/10 bg-zinc-800 px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-indigo-400/30"
       />
       <textarea
         value={desc}
@@ -226,7 +226,7 @@ function ListForm({
         placeholder="Description (optional)"
         maxLength={280}
         rows={2}
-        className="w-full resize-none rounded-xl border border-white/10 bg-zinc-800 px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-amber-400/50"
+        className="w-full resize-none rounded-xl border border-white/10 bg-zinc-800 px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-indigo-400/30"
       />
       <div className="flex items-center justify-between">
         <label className="flex cursor-pointer items-center gap-2.5">
@@ -234,7 +234,7 @@ function ListForm({
             type="button"
             onClick={() => setIsPublic((v) => !v)}
             className={`relative h-5 w-9 rounded-full transition-colors focus:outline-none ${
-              isPublic ? "bg-amber-400" : "bg-zinc-600"
+              isPublic ? "bg-indigo-500" : "bg-zinc-600"
             }`}
           >
             <span
@@ -257,7 +257,7 @@ function ListForm({
             type="button"
             disabled={!name.trim() || saving}
             onClick={() => onSave({ name: name.trim(), description: desc.trim(), is_public: isPublic })}
-            className="rounded-full bg-amber-300 px-4 py-1.5 text-xs font-semibold text-black hover:bg-amber-200 disabled:opacity-50"
+            className="rounded-full bg-indigo-400 px-4 py-1.5 text-xs font-semibold text-black hover:bg-indigo-300 disabled:opacity-50"
           >
             {saving ? "Saving…" : "Save"}
           </button>
@@ -359,7 +359,7 @@ function ListDetail({
             <p className="text-sm text-zinc-500">No films in this list yet.</p>
             <button
               onClick={() => setShowPicker(true)}
-              className="mt-3 text-xs text-amber-200/70 hover:text-amber-200"
+              className="mt-3 text-xs text-indigo-300/70 hover:text-indigo-300"
             >
               Add your first film →
             </button>
@@ -588,7 +588,7 @@ export function ProfileListsSection({
           </p>
           <button
             onClick={() => setCreating(true)}
-            className="mt-4 inline-block rounded-full bg-amber-300/15 px-4 py-2 text-sm font-medium text-amber-200 hover:bg-amber-300/25"
+            className="mt-4 inline-block rounded-full bg-indigo-400/15 px-4 py-2 text-sm font-medium text-indigo-300 hover:bg-indigo-400/25"
           >
             + Create your first list
           </button>
@@ -604,7 +604,7 @@ export function ProfileListsSection({
               className="group text-left"
             >
               {/* Cover */}
-              <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-2xl bg-zinc-800 ring-1 ring-white/5 transition group-hover:ring-amber-300/40">
+              <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-2xl bg-zinc-800 ring-1 ring-white/5 transition group-hover:ring-indigo-400/30">
                 <AlbumCover movies={list.movies} name={list.name} />
                 {/* Movie count badge */}
                 {list.movies.length > 0 && (
@@ -614,7 +614,7 @@ export function ProfileListsSection({
                 )}
               </div>
               {/* Info */}
-              <p className="truncate text-sm font-semibold text-white group-hover:text-amber-100">
+              <p className="truncate text-sm font-semibold text-white group-hover:text-indigo-200">
                 {list.name}
               </p>
               <p className="text-xs text-zinc-500">

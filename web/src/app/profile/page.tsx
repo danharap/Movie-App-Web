@@ -193,7 +193,7 @@ export default async function ProfilePage() {
       <div className="mx-auto max-w-2xl px-4 py-20 text-center">
         <h1 className="text-2xl font-semibold text-white">Your Profile</h1>
         <p className="mt-4 text-sm text-zinc-400">
-          <Link href="/login" className="text-amber-200 underline underline-offset-2 hover:text-amber-100">
+          <Link href="/login" className="text-indigo-300 underline underline-offset-2 hover:text-indigo-200">
             Sign in
           </Link>{" "}
           to view and manage your profile.
@@ -230,7 +230,7 @@ export default async function ProfilePage() {
             {username ? (
               <p className="text-sm text-zinc-500">@{username}</p>
             ) : (
-              <p className="text-xs text-amber-200/50">Set a username to make your profile discoverable</p>
+              <p className="text-xs text-indigo-300/50">Set a username to make your profile discoverable</p>
             )}
           </div>
           {bio ? (
@@ -263,12 +263,14 @@ export default async function ProfilePage() {
       </div>
 
       {/* ── Stats ── */}
-      <div className="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-2">
+      <div className="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
           { label: "Films", value: stats.totalWatched },
-          { label: "Avg Rating", value: stats.avgRating != null ? `${stats.avgRating.toFixed(1)}/10` : "—" },
+          { label: "Avg Rating", value: stats.avgRating != null ? `${stats.avgRating.toFixed(1)}` : "—" },
+          { label: "Following", value: stats.following },
+          { label: "Followers", value: stats.followers },
         ].map(({ label, value }) => (
-          <div key={label} className="rounded-2xl border border-white/10 bg-zinc-900/40 px-4 py-5 text-center">
+          <div key={label} className="rounded-2xl border border-white/[0.07] bg-zinc-900/40 px-4 py-5 text-center">
             <p className="text-2xl font-bold text-white">{value}</p>
             <p className="mt-1 text-xs text-zinc-500">{label}</p>
           </div>
@@ -288,33 +290,37 @@ export default async function ProfilePage() {
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-white">Recently Watched</h2>
             {watched.length > 6 ? (
-              <Link href="/watched" className="text-xs text-amber-200/70 hover:text-amber-100">
+              <Link href="/watched" className="text-xs text-indigo-300/70 transition hover:text-indigo-200">
                 View diary →
               </Link>
             ) : null}
           </div>
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
             {recent.map(({ movie, user_rating }) => {
               const poster = posterUrl(movie.poster_path, "w342");
               return (
                 <div key={movie.id} className="group relative">
                   <Link
                     href={`/movie/${movie.tmdb_id}`}
-                    className="relative block aspect-[2/3] overflow-hidden rounded-xl bg-zinc-800"
+                    className="relative block aspect-[2/3] overflow-hidden rounded-xl bg-zinc-800 ring-0 transition hover:ring-1 hover:ring-indigo-400/30"
                   >
                     {poster ? (
                       <Image
                         src={poster}
                         alt={movie.title}
                         fill
-                        className="object-cover transition group-hover:scale-[1.03]"
+                        className="object-cover transition duration-300 group-hover:scale-[1.04]"
                         sizes="(max-width:640px) 33vw, 120px"
                       />
-                    ) : null}
+                    ) : (
+                      <div className="flex h-full items-center justify-center p-1">
+                        <span className="line-clamp-3 text-center text-[9px] text-zinc-500">{movie.title}</span>
+                      </div>
+                    )}
                   </Link>
                   {user_rating != null ? (
-                    <span className="absolute bottom-1.5 right-1.5 rounded-md bg-black/80 px-1.5 py-0.5 text-[10px] font-semibold text-amber-200 ring-1 ring-white/10">
-                      {user_rating}/10
+                    <span className="absolute bottom-1.5 right-1.5 rounded-md bg-black/80 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-200 ring-1 ring-white/10">
+                      {user_rating}
                     </span>
                   ) : null}
                 </div>
@@ -336,39 +342,46 @@ export default async function ProfilePage() {
       {/* ── Watchlist ── */}
       <section className="mb-12">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">Watchlist ({watchlist.length})</h2>
+          <h2 className="text-lg font-semibold text-white">
+            Watchlist{" "}
+            <span className="text-sm font-normal text-zinc-500">({watchlist.length})</span>
+          </h2>
           {watchlist.length > 0 ? (
-            <Link href="/watchlist" className="text-xs text-amber-200/70 hover:text-amber-100">
+            <Link href="/watchlist" className="text-xs text-indigo-300/70 transition hover:text-indigo-200">
               Manage →
             </Link>
           ) : null}
         </div>
         {watchlist.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-white/15 bg-zinc-900/30 px-6 py-12 text-center">
+          <div className="rounded-2xl border border-dashed border-white/10 bg-zinc-900/30 px-6 py-12 text-center">
             <p className="text-sm text-zinc-400">Nothing queued up.</p>
-            <Link href="/browse" className="mt-4 inline-block text-sm font-medium text-amber-200 hover:text-amber-100">
+            <Link href="/browse" className="mt-4 inline-block text-sm font-medium text-indigo-300 transition hover:text-indigo-200">
               Browse films →
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
             {watchlist.slice(0, 12).map(({ movie }) => {
               const poster = posterUrl(movie.poster_path, "w342");
               return (
                 <Link
                   key={movie.id}
                   href={`/movie/${movie.tmdb_id}`}
-                  className="group relative block aspect-[2/3] overflow-hidden rounded-xl bg-zinc-800"
+                  className="group relative block aspect-[2/3] overflow-hidden rounded-xl bg-zinc-800 ring-0 transition hover:ring-1 hover:ring-indigo-400/30"
                 >
                   {poster ? (
                     <Image
                       src={poster}
                       alt={movie.title}
                       fill
-                      className="object-cover transition group-hover:scale-[1.03]"
+                      className="object-cover transition duration-300 group-hover:scale-[1.04]"
                       sizes="(max-width:640px) 33vw, 120px"
                     />
-                  ) : null}
+                  ) : (
+                    <div className="flex h-full items-center justify-center p-1">
+                      <span className="line-clamp-3 text-center text-[9px] text-zinc-500">{movie.title}</span>
+                    </div>
+                  )}
                 </Link>
               );
             })}
@@ -382,7 +395,7 @@ export default async function ProfilePage() {
           <h2 className="text-base font-semibold text-white">Rate Nudge Film</h2>
           <p className="text-xs text-zinc-500">
             Share what you think of the app — not a movie review.{" "}
-            <Link href="/feedback" className="text-amber-200/70 hover:text-amber-100">
+            <Link href="/feedback" className="text-indigo-300/70 hover:text-indigo-200">
               Read all reviews →
             </Link>
           </p>

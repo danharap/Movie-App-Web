@@ -143,7 +143,7 @@ export default async function MovieDetailPage({ params }: Props) {
               <span>{movie.runtime ?? "—"} min</span>
             </div>
             {existing?.user_rating ? (
-              <p className="text-sm text-amber-100/80">
+              <p className="text-sm text-indigo-200/80">
                 Your rating:{" "}
                 <span className="font-semibold">{existing.user_rating}/10</span>
               </p>
@@ -188,7 +188,7 @@ export default async function MovieDetailPage({ params }: Props) {
                   <Avatar url={f.avatar_url} name={f.name} size={28} />
                   <div>
                     <p className="text-xs font-medium text-white">{f.name}</p>
-                    <p className="text-xs text-amber-200/80">{f.rating}/10</p>
+                    <p className="text-xs text-indigo-300/80">{f.rating}/10</p>
                   </div>
                 </Link>
               ))}

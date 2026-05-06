@@ -100,7 +100,7 @@ export function SummaryStep({ matchedData, onStartOver }: SummaryStepProps) {
   if (phase === "checking") {
     return (
       <div className="mx-auto flex w-full max-w-xl flex-col items-center gap-4 py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-amber-300" />
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-400" />
         <p className="text-sm text-zinc-400">Checking for existing films…</p>
       </div>
     );
@@ -111,8 +111,8 @@ export function SummaryStep({ matchedData, onStartOver }: SummaryStepProps) {
     return (
       <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
         <div className="flex flex-col items-center gap-3 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-300/10">
-            <AlertTriangle className="h-7 w-7 text-amber-300" />
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-500/10">
+            <AlertTriangle className="h-7 w-7 text-indigo-400" />
           </div>
           <div>
             <h2 className="text-xl font-semibold text-white">
@@ -127,9 +127,9 @@ export function SummaryStep({ matchedData, onStartOver }: SummaryStepProps) {
         <div className="space-y-3">
           <button
             onClick={() => runSave("overwrite")}
-            className="flex w-full flex-col gap-1 rounded-xl bg-amber-300/10 p-4 text-left ring-1 ring-amber-300/20 transition hover:bg-amber-300/15"
+            className="flex w-full flex-col gap-1 rounded-xl bg-indigo-500/10 p-4 text-left ring-1 ring-indigo-400/20 transition hover:bg-indigo-400/15"
           >
-            <span className="font-semibold text-amber-200">Overwrite existing</span>
+            <span className="font-semibold text-indigo-300">Overwrite existing</span>
             <span className="text-sm text-zinc-400">
               Update ratings, dates, and notes for all {duplicateCount} existing films.
               Recommended if you&apos;re doing a fresh re-import to fix ratings.
@@ -163,7 +163,7 @@ export function SummaryStep({ matchedData, onStartOver }: SummaryStepProps) {
     return (
       <div className="mx-auto flex w-full max-w-xl flex-col items-center gap-8 py-8">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-amber-300" />
+          <Loader2 className="h-10 w-10 animate-spin text-indigo-400" />
           <div className="text-center">
             <p className="text-lg font-medium text-white">Saving your library…</p>
             <p className="mt-1 text-sm text-zinc-400">
@@ -173,7 +173,7 @@ export function SummaryStep({ matchedData, onStartOver }: SummaryStepProps) {
         </div>
         <div className="w-full rounded-full bg-white/10">
           <div
-            className="h-2 rounded-full bg-amber-300 transition-all duration-300"
+            className="h-2 rounded-full bg-indigo-400 transition-all duration-300"
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -227,7 +227,7 @@ export function SummaryStep({ matchedData, onStartOver }: SummaryStepProps) {
       {/* Stats grid */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard
-          icon={<Film className="h-5 w-5 text-amber-300" />}
+          icon={<Film className="h-5 w-5 text-indigo-400" />}
           value={r.watchedImported}
           label="Films imported"
           highlight
@@ -283,7 +283,7 @@ export function SummaryStep({ matchedData, onStartOver }: SummaryStepProps) {
       <div className="flex flex-col gap-3 sm:flex-row">
         <Link
           href="/watched"
-          className="flex-1 rounded-full bg-amber-200/90 px-6 py-3 text-center text-sm font-semibold text-zinc-950 transition hover:bg-amber-200"
+          className="flex-1 rounded-full bg-indigo-500 px-6 py-3 text-center text-sm font-semibold text-white transition hover:bg-indigo-300"
         >
           View my watched films →
         </Link>
@@ -319,11 +319,11 @@ function StatCard({
   return (
     <div
       className={`flex flex-col items-center gap-2 rounded-xl p-4 text-center ${
-        highlight ? "bg-amber-300/10 ring-1 ring-amber-300/20" : "bg-white/5"
+        highlight ? "bg-indigo-500/10 ring-1 ring-indigo-400/20" : "bg-white/5"
       }`}
     >
       {icon}
-      <div className={`text-2xl font-bold ${highlight ? "text-amber-300" : "text-white"}`}>
+      <div className={`text-2xl font-bold ${highlight ? "text-indigo-400" : "text-white"}`}>
         {value.toLocaleString()}
       </div>
       <div className="text-xs text-zinc-500">{label}</div>

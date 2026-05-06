@@ -107,7 +107,7 @@ export function FavouritesPicker({ slots }: { slots: Slot[] }) {
                 type="button"
                 onClick={() => openSlot(pos)}
                 disabled={isPending}
-                className="relative aspect-[2/3] w-full overflow-hidden rounded-xl border border-white/10 bg-zinc-800 transition hover:border-amber-200/30 disabled:opacity-50"
+                className="relative aspect-[2/3] w-full overflow-hidden rounded-xl border border-white/10 bg-zinc-800 transition hover:border-indigo-400/25 disabled:opacity-50"
               >
                 {poster ? (
                   <Image
@@ -176,7 +176,7 @@ export function FavouritesPicker({ slots }: { slots: Slot[] }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search movies…"
-            className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none placeholder:text-zinc-600 focus:ring-2 focus:ring-amber-200/30"
+            className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none placeholder:text-zinc-600 focus:ring-2 focus:ring-indigo-400/25"
           />
           {searching ? (
             <p className="text-xs text-zinc-500">Searching…</p>

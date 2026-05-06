@@ -101,7 +101,7 @@ export default async function BrowsePage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
       <header className="mb-8 space-y-2">
-        <p className="text-xs font-medium uppercase tracking-[0.2em] text-amber-200/70">
+        <p className="text-xs font-medium uppercase tracking-[0.2em] text-indigo-300/70">
           Discover
         </p>
         <h1 className="text-3xl font-semibold text-white">Browse Films</h1>

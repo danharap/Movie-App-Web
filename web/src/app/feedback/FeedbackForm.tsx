@@ -33,7 +33,7 @@ export function FeedbackForm({ existing, compact = false }: Props) {
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="text-xs text-amber-200/80 hover:text-amber-100"
+              className="text-xs text-indigo-300/80 hover:text-indigo-200"
             >
               Edit
             </button>
@@ -57,7 +57,7 @@ export function FeedbackForm({ existing, compact = false }: Props) {
             </button>
           </div>
         </div>
-        <div className="flex gap-0.5 text-amber-300">
+        <div className="flex gap-0.5 text-indigo-400">
           {STARS.map((s) => (
             <span key={s} className={s <= existing.rating ? "opacity-100" : "opacity-20"}>
               ★
@@ -120,8 +120,8 @@ export function FeedbackForm({ existing, compact = false }: Props) {
               onClick={() => setRating(s)}
               aria-label={`${s} star${s > 1 ? "s" : ""}`}
               className={`text-2xl transition-colors ${
-                s <= (hovered || rating) ? "text-amber-300" : "text-zinc-600"
-              } hover:text-amber-200`}
+                s <= (hovered || rating) ? "text-indigo-400" : "text-zinc-600"
+              } hover:text-indigo-300`}
             >
               ★
             </button>
@@ -141,7 +141,7 @@ export function FeedbackForm({ existing, compact = false }: Props) {
           onChange={(e) => setBody(e.target.value)}
           placeholder="Share what you think about Nudge Film…"
           maxLength={2000}
-          className="w-full resize-none rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:ring-2 focus:ring-amber-200/30"
+          className="w-full resize-none rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:ring-2 focus:ring-indigo-400/25"
         />
         <p className="text-right text-xs text-zinc-600">{body.length}/2000</p>
       </div>
@@ -161,7 +161,7 @@ export function FeedbackForm({ existing, compact = false }: Props) {
         <button
           type="submit"
           disabled={isPending}
-          className="rounded-full bg-amber-200/90 px-6 py-2.5 text-sm font-semibold text-zinc-950 transition hover:bg-amber-200 disabled:opacity-60"
+          className="rounded-full bg-indigo-500 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-300 disabled:opacity-60"
         >
           {isPending ? "Saving…" : existing ? "Update review" : "Submit review"}
         </button>

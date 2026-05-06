@@ -28,7 +28,7 @@ export function Avatar({ url, name, size = 40, className = "" }: Props) {
 
   return (
     <div
-      className={`flex shrink-0 items-center justify-center rounded-full bg-zinc-800 font-bold text-amber-200 select-none ${className}`}
+      className={`flex shrink-0 items-center justify-center rounded-full bg-zinc-800 font-bold text-indigo-300 select-none ${className}`}
       style={{ width: size, height: size, fontSize: Math.max(size * 0.35, 11) }}
       aria-label={name}
     >

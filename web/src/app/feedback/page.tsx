@@ -10,7 +10,7 @@ const STARS = [1, 2, 3, 4, 5] as const;
 function StarDisplay({ rating }: { rating: number }) {
   return (
     <span
-      className="flex gap-0.5 text-amber-300/90"
+      className="flex gap-0.5 text-indigo-400/90"
       aria-label={`${rating} out of 5 stars`}
     >
       {STARS.map((s) => (
@@ -50,7 +50,7 @@ export default async function FeedbackPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
       <header className="mb-10 space-y-2">
-        <p className="text-xs font-medium uppercase tracking-[0.2em] text-amber-200/70">
+        <p className="text-xs font-medium uppercase tracking-[0.2em] text-indigo-300/70">
           Community
         </p>
         <h1 className="text-3xl font-semibold tracking-tight text-white">
@@ -63,7 +63,7 @@ export default async function FeedbackPage() {
               {" "}
               <Link
                 href="/login?redirect=/feedback"
-                className="text-amber-200/80 underline underline-offset-2 hover:text-amber-100"
+                className="text-indigo-300/80 underline underline-offset-2 hover:text-indigo-200"
               >
                 Sign in
               </Link>{" "}
@@ -87,7 +87,7 @@ export default async function FeedbackPage() {
           {!user ? (
             <Link
               href="/login?redirect=/feedback"
-              className="mt-6 inline-block text-sm font-medium text-amber-200 hover:text-amber-100"
+              className="mt-6 inline-block text-sm font-medium text-indigo-300 hover:text-indigo-200"
             >
               Sign in to review →
             </Link>
@@ -96,12 +96,12 @@ export default async function FeedbackPage() {
       ) : (
         <ul className="space-y-5">
           {ownReview ? (
-            <li className="space-y-2 rounded-2xl border border-amber-200/15 bg-zinc-900/40 p-5">
+            <li className="space-y-2 rounded-2xl border border-indigo-400/12 bg-zinc-900/40 p-5">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="text-sm font-medium text-white">
                     {ownReview.reviewer_display_name}{" "}
-                    <span className="ml-1.5 rounded-full border border-amber-200/20 bg-amber-200/10 px-2 py-0.5 text-xs text-amber-200/80">
+                    <span className="ml-1.5 rounded-full border border-indigo-400/15 bg-indigo-400/10 px-2 py-0.5 text-xs text-indigo-300/80">
                       You
                     </span>
                   </p>

@@ -44,7 +44,7 @@ export function ResultsClient() {
         </p>
         <Link
           href="/recommend"
-          className="mt-8 inline-flex rounded-full bg-amber-200/90 px-6 py-3 text-sm font-semibold text-zinc-950 hover:bg-amber-200"
+          className="mt-8 inline-flex rounded-full bg-indigo-500 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-300"
         >
           Start narrowing down
         </Link>
@@ -55,7 +55,7 @@ export function ResultsClient() {
   return (
     <div className="mx-auto max-w-3xl space-y-10 px-4 py-12 sm:px-6">
       <header className="space-y-2">
-        <p className="text-xs font-medium uppercase tracking-[0.2em] text-amber-200/70">
+        <p className="text-xs font-medium uppercase tracking-[0.2em] text-indigo-300/70">
           Your shortlist
         </p>
         <h1 className="text-3xl font-semibold tracking-tight text-white">
@@ -68,8 +68,8 @@ export function ResultsClient() {
       </header>
 
       {data.finderMeta?.conflictDetected && data.finderMeta.userMessage ? (
-        <div className="rounded-xl border border-amber-200/20 bg-amber-200/[0.06] px-4 py-3 text-sm text-amber-100/80">
-          <span className="mr-2 font-medium text-amber-200">Mixed preferences detected —</span>
+        <div className="rounded-xl border border-indigo-400/15 bg-indigo-300/[0.06] px-4 py-3 text-sm text-indigo-200/80">
+          <span className="mr-2 font-medium text-indigo-300">Mixed preferences detected —</span>
           {data.finderMeta.userMessage}
         </div>
       ) : null}
@@ -87,13 +87,13 @@ export function ResultsClient() {
       <div className="flex flex-wrap gap-3">
         <Link
           href="/recommend"
-          className="rounded-full border border-white/15 px-4 py-2 text-sm text-zinc-300 hover:border-amber-200/40 hover:text-white"
+          className="rounded-full border border-white/15 px-4 py-2 text-sm text-zinc-300 hover:border-indigo-400/30 hover:text-white"
         >
           Different vibe
         </Link>
         <Link
           href="/watchlist"
-          className="rounded-full border border-white/15 px-4 py-2 text-sm text-zinc-300 hover:border-amber-200/40 hover:text-white"
+          className="rounded-full border border-white/15 px-4 py-2 text-sm text-zinc-300 hover:border-indigo-400/30 hover:text-white"
         >
           Open watchlist
         </Link>

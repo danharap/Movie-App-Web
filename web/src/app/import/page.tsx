@@ -22,7 +22,7 @@ export default async function ImportPage() {
     <main className="min-h-screen">
       <div className="border-b border-white/5 bg-gradient-to-b from-zinc-900 to-transparent px-4 py-8 text-center">
         <div className="mx-auto max-w-xl">
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-amber-300/10 px-3 py-1 text-xs font-medium text-amber-300">
+          <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-400">
             <span>🎬</span> Letterboxd Import
           </div>
           <h1 className="mt-2 text-2xl font-bold text-white sm:text-3xl">

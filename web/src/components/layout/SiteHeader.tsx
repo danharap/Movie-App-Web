@@ -3,6 +3,7 @@ import { APP_NAME } from "@/config/brand";
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
+import { MobileMenu } from "./MobileMenu";
 
 const publicLinks = [
   { href: "/recommend", label: "Find a film" },
@@ -23,10 +24,10 @@ export async function SiteHeader() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Fetch profile for avatar, display name, and role
   let avatarUrl: string | null = null;
   let displayName: string | null = null;
   let isAdmin = false;
+
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
@@ -43,56 +44,57 @@ export async function SiteHeader() {
   }
 
   return (
-    <header className="border-b border-white/10 bg-black/40 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+    <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-zinc-950/80 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
+        {/* Brand */}
         <Link
           href="/"
-          className="shrink-0 text-lg font-semibold tracking-tight text-white sm:text-xl"
+          className="shrink-0 text-base font-semibold tracking-tight text-white transition hover:opacity-90 sm:text-lg"
         >
-          <span className="text-amber-200/90">{APP_NAME}</span>
-          <span className="text-zinc-400"> — pick fast</span>
+          <span className="text-indigo-300">{APP_NAME}</span>
+          <span className="hidden text-zinc-500 sm:inline"> — pick fast</span>
         </Link>
 
-        <nav className="flex flex-wrap items-center gap-1 sm:flex-1 sm:justify-center">
+        {/* Desktop nav — hidden on mobile */}
+        <nav className="hidden items-center gap-0.5 md:flex">
           {publicLinks.map((l) => (
             <Link
               key={l.href}
               href={l.href}
-              className="rounded-full px-3 py-1.5 text-xs text-zinc-300 transition hover:bg-white/5 hover:text-white sm:text-sm"
+              className="rounded-lg px-3 py-1.5 text-sm text-zinc-400 transition hover:bg-white/[0.04] hover:text-white"
             >
               {l.label}
             </Link>
           ))}
-          {user
-            ? authedLinks.map((l) => (
-                <Link
-                  key={l.href}
-                  href={l.href}
-                  className="rounded-full px-3 py-1.5 text-xs text-zinc-300 transition hover:bg-white/5 hover:text-white sm:text-sm"
-                >
-                  {l.label}
-                </Link>
-              ))
-            : null}
+          {user &&
+            authedLinks.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                className="rounded-lg px-3 py-1.5 text-sm text-zinc-400 transition hover:bg-white/[0.04] hover:text-white"
+              >
+                {l.label}
+              </Link>
+            ))}
           {isAdmin && (
             <Link
               href="/admin"
-              className="rounded-full bg-amber-300/10 px-3 py-1.5 text-xs font-medium text-amber-200 transition hover:bg-amber-300/20 sm:text-sm"
+              className="ml-1 rounded-lg bg-indigo-500/10 px-3 py-1.5 text-sm font-medium text-indigo-300 transition hover:bg-indigo-500/20"
             >
               Admin
             </Link>
           )}
         </nav>
 
-        <div className="flex flex-wrap items-center justify-end gap-2">
+        {/* Desktop auth — hidden on mobile */}
+        <div className="hidden items-center gap-2 md:flex">
           {user ? (
             <>
-              {/* Profile avatar + name — clicking goes to /profile */}
               <Link
                 href="/profile"
-                className="flex items-center gap-2 rounded-full py-1 pl-1 pr-3 transition hover:bg-white/5"
+                className="flex items-center gap-2 rounded-full py-1 pl-1 pr-3 transition hover:bg-white/[0.04]"
               >
-                <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-full bg-zinc-700 ring-1 ring-white/15">
+                <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-full bg-zinc-800 ring-1 ring-white/10">
                   {avatarUrl ? (
                     <Image
                       src={avatarUrl}
@@ -103,20 +105,19 @@ export async function SiteHeader() {
                       unoptimized
                     />
                   ) : (
-                    <span className="flex h-full w-full items-center justify-center text-xs font-bold text-amber-200 select-none">
+                    <span className="flex h-full w-full items-center justify-center text-xs font-bold text-indigo-300 select-none">
                       {(displayName ?? "?").slice(0, 1).toUpperCase()}
                     </span>
                   )}
                 </div>
-                <span className="hidden max-w-[120px] truncate text-sm font-medium text-zinc-200 md:block">
+                <span className="max-w-[120px] truncate text-sm font-medium text-zinc-200">
                   {displayName}
                 </span>
               </Link>
-
               <form action={signOut}>
                 <button
                   type="submit"
-                  className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-sm text-zinc-200 transition hover:border-amber-200/40 hover:text-white"
+                  className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm text-zinc-400 transition hover:border-white/20 hover:text-white"
                 >
                   Sign out
                 </button>
@@ -126,19 +127,29 @@ export async function SiteHeader() {
             <>
               <Link
                 href="/login"
-                className="rounded-full px-3 py-1.5 text-sm text-zinc-300 hover:text-white"
+                className="rounded-lg px-3 py-1.5 text-sm text-zinc-400 transition hover:text-white"
               >
                 Log in
               </Link>
               <Link
                 href="/signup"
-                className="rounded-full bg-amber-200/90 px-3 py-1.5 text-sm font-medium text-zinc-950 transition hover:bg-amber-200"
+                className="rounded-lg bg-indigo-500 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-indigo-400"
               >
                 Sign up
               </Link>
             </>
           )}
         </div>
+
+        {/* Mobile hamburger — rendered by client component, hidden on desktop */}
+        <MobileMenu
+          user={user}
+          avatarUrl={avatarUrl}
+          displayName={displayName}
+          isAdmin={isAdmin}
+          publicLinks={publicLinks}
+          authedLinks={authedLinks}
+        />
       </div>
     </header>
   );

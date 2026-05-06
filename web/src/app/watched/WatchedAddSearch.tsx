@@ -101,7 +101,7 @@ export function WatchedAddSearch({ alreadyWatchedTmdbIds }: Props) {
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search movies…"
         autoComplete="off"
-        className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:ring-2 focus:ring-amber-200/30"
+        className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:ring-2 focus:ring-indigo-400/25"
         aria-label="Search movies to add to watched"
       />
       {error ? (
@@ -152,7 +152,7 @@ export function WatchedAddSearch({ alreadyWatchedTmdbIds }: Props) {
                     type="button"
                     disabled={addingId === m.id}
                     onClick={() => onAdd(m.id)}
-                    className="shrink-0 rounded-full border border-amber-200/40 bg-amber-200/10 px-3 py-1.5 text-xs font-medium text-amber-100 transition hover:bg-amber-200/20 disabled:opacity-50"
+                    className="shrink-0 rounded-full border border-indigo-400/30 bg-indigo-400/10 px-3 py-1.5 text-xs font-medium text-indigo-200 transition hover:bg-indigo-400/20 disabled:opacity-50"
                   >
                     {addingId === m.id ? "Saving…" : "Watched"}
                   </button>

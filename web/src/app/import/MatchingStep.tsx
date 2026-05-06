@@ -226,7 +226,7 @@ export function MatchingStep({ parsed, onMatched }: MatchingStepProps) {
     return (
       <div className="mx-auto flex w-full max-w-xl flex-col items-center gap-8 py-8">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-amber-300" />
+          <Loader2 className="h-10 w-10 animate-spin text-indigo-400" />
           <div className="text-center">
             <p className="text-lg font-medium text-white">Matching your films…</p>
             <p className="mt-1 text-sm text-zinc-400">
@@ -236,7 +236,7 @@ export function MatchingStep({ parsed, onMatched }: MatchingStepProps) {
         </div>
         <div className="w-full rounded-full bg-white/10">
           <div
-            className="h-2 rounded-full bg-amber-300 transition-all duration-300"
+            className="h-2 rounded-full bg-indigo-400 transition-all duration-300"
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -295,7 +295,7 @@ export function MatchingStep({ parsed, onMatched }: MatchingStepProps) {
         {/* Confidence badge */}
         <div className="flex justify-center">
           {originalResult.confidence === "low" ? (
-            <span className="flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-300">
+            <span className="flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-medium text-indigo-400">
               <HelpCircle className="h-3.5 w-3.5" />
               Possible match found — please verify
             </span>

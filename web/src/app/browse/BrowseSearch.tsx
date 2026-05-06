@@ -85,7 +85,7 @@ export function BrowseSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search any film by title…"
         autoComplete="off"
-        className="w-full rounded-2xl border border-white/10 bg-black/40 px-5 py-3.5 text-sm text-white outline-none placeholder:text-zinc-600 focus:ring-2 focus:ring-amber-200/30"
+        className="w-full rounded-2xl border border-white/10 bg-black/40 px-5 py-3.5 text-sm text-white outline-none placeholder:text-zinc-600 focus:ring-2 focus:ring-indigo-400/25"
       />
 
       {(results.length > 0 || loading || error) && debounced.length >= 2 ? (
@@ -111,7 +111,7 @@ export function BrowseSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
                       ) : null}
                     </Link>
                     <div className="min-w-0 flex-1">
-                      <Link href={`/movie/${m.id}`} className="truncate text-sm font-medium text-white hover:text-amber-100 block">
+                      <Link href={`/movie/${m.id}`} className="truncate text-sm font-medium text-white hover:text-indigo-200 block">
                         {m.title}
                       </Link>
                       <p className="text-xs text-zinc-500">

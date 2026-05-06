@@ -5,6 +5,7 @@ import { posterUrl } from "@/lib/tmdb/constants";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 export type BrowseMovie = {
   id: number;
@@ -25,7 +26,6 @@ type Props = {
 };
 
 export function BrowseMovieCard({ movie, isWatched, isWatchlisted, isLoggedIn }: Props) {
-  const [status, setStatus] = useState<string | null>(null);
   const [watched, setWatched] = useState(isWatched ?? false);
   const [watchlisted, setWatchlisted] = useState(isWatchlisted ?? false);
   const [isPending, startTransition] = useTransition();
@@ -35,23 +35,22 @@ export function BrowseMovieCard({ movie, isWatched, isWatchlisted, isLoggedIn }:
 
   function run(action: () => Promise<void>, onSuccess: () => void, msg: string) {
     if (!isLoggedIn) {
-      setStatus("Sign in to save films.");
+      toast.error("Sign in to save films.");
       return;
     }
-    setStatus(null);
     startTransition(async () => {
       try {
         await action();
         onSuccess();
-        setStatus(msg);
+        toast.success(msg);
       } catch (e) {
-        setStatus(e instanceof Error ? e.message : "Something went wrong.");
+        toast.error(e instanceof Error ? e.message : "Something went wrong.");
       }
     });
   }
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-zinc-900/50 shadow-lg shadow-black/30 transition hover:border-amber-200/20">
+    <article className="group flex flex-col overflow-hidden rounded-2xl border border-white/[0.07] bg-zinc-900/60 shadow-lg shadow-black/30 transition-all duration-300 hover:border-indigo-400/20 hover:-translate-y-0.5 hover:shadow-indigo-950/20">
       <Link
         href={`/movie/${movie.id}`}
         className="relative aspect-[2/3] w-full overflow-hidden bg-zinc-800"
@@ -61,12 +60,18 @@ export function BrowseMovieCard({ movie, isWatched, isWatchlisted, isLoggedIn }:
             src={poster}
             alt={movie.title}
             fill
-            className="object-cover transition duration-500 group-hover:scale-[1.03]"
+            className="object-cover transition duration-500 group-hover:scale-[1.04]"
             sizes="(max-width:640px) 50vw, (max-width:1024px) 33vw, 20vw"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-zinc-600 text-xs">
-            No poster
+          <div className="flex h-full items-center justify-center p-2 text-zinc-600 text-xs text-center">
+            {movie.title}
+          </div>
+        )}
+        {/* Score badge */}
+        {movie.vote_average > 0 && (
+          <div className="absolute left-2 top-2 rounded-md bg-black/70 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-200 backdrop-blur-sm ring-1 ring-white/10">
+            ★ {movie.vote_average.toFixed(1)}
           </div>
         )}
       </Link>
@@ -75,13 +80,11 @@ export function BrowseMovieCard({ movie, isWatched, isWatchlisted, isLoggedIn }:
         <div>
           <Link
             href={`/movie/${movie.id}`}
-            className="line-clamp-2 text-sm font-medium text-white hover:text-amber-100"
+            className="line-clamp-2 text-sm font-medium text-white transition hover:text-indigo-200"
           >
             {movie.title}
           </Link>
-          <p className="text-xs text-zinc-500">
-            {year} · ★ {movie.vote_average.toFixed(1)}
-          </p>
+          <p className="mt-0.5 text-xs text-zinc-500">{year}</p>
         </div>
 
         <div className="mt-auto flex gap-1.5 pt-1">
@@ -92,16 +95,16 @@ export function BrowseMovieCard({ movie, isWatched, isWatchlisted, isLoggedIn }:
               run(
                 () => markWatched(movie.id),
                 () => setWatched(true),
-                "Added to diary.",
+                "Added to your diary.",
               )
             }
             className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition disabled:opacity-50 ${
               watched
-                ? "border border-amber-200/30 bg-amber-200/10 text-amber-100"
-                : "border border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
+                ? "border border-indigo-400/30 bg-indigo-400/10 text-indigo-200"
+                : "border border-white/[0.08] bg-white/[0.04] text-zinc-400 hover:bg-white/[0.08] hover:text-white"
             }`}
           >
-            {watched ? "Watched ✓" : "Watched"}
+            {watched ? "✓ Watched" : "Watched"}
           </button>
           <button
             type="button"
@@ -116,18 +119,12 @@ export function BrowseMovieCard({ movie, isWatched, isWatchlisted, isLoggedIn }:
             className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition disabled:opacity-50 ${
               watchlisted
                 ? "border border-white/20 bg-white/10 text-white"
-                : "border border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
+                : "border border-white/[0.08] bg-white/[0.04] text-zinc-400 hover:bg-white/[0.08] hover:text-white"
             }`}
           >
-            {watchlisted ? "Queued ✓" : "Watchlist"}
+            {watchlisted ? "✓ Queued" : "Watchlist"}
           </button>
         </div>
-
-        {status ? (
-          <p className="text-xs text-zinc-400" role="status">
-            {status}
-          </p>
-        ) : null}
       </div>
     </article>
   );

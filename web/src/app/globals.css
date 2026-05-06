@@ -2,12 +2,12 @@
 
 :root {
   --background: #070708;
-  --foreground: #f4f4f5;
+  --foreground: #f1f1f3;
   --muted: #a1a1aa;
-  --card: rgba(24, 24, 27, 0.72);
-  --accent: #fbbf24;
-  --accent-dim: rgba(251, 191, 36, 0.15);
-  --ring: rgba(251, 191, 36, 0.45);
+  --card: rgba(20, 20, 28, 0.75);
+  --accent: #818cf8;
+  --accent-dim: rgba(129, 140, 248, 0.14);
+  --ring: rgba(129, 140, 248, 0.4);
 }
 
 @theme inline {
@@ -37,7 +37,7 @@ html {
 body {
   background: radial-gradient(
       ellipse 120% 80% at 50% -20%,
-      rgba(251, 191, 36, 0.12),
+      rgba(99, 102, 241, 0.10),
       transparent 55%
     ),
     var(--background);
@@ -47,10 +47,20 @@ body {
 }
 
 ::selection {
-  background: rgba(251, 191, 36, 0.35);
-  color: #0a0a0a;
+  background: rgba(129, 140, 248, 0.35);
+  color: #ffffff;
 }
 
+/* ── Scrollbar utilities ── */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Skeleton shimmer ── */
 @keyframes shimmer {
   100% {
     transform: translateX(100%);
@@ -71,10 +81,10 @@ body {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.07),
     transparent
   );
-  animation: shimmer 1.4s ease-in-out infinite;
+  animation: shimmer 1.5s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -83,10 +93,11 @@ body {
   }
 }
 
+/* ── Reveal animation ── */
 .reveal {
   opacity: 0;
-  transform: translateY(10px);
-  animation: reveal 0.55s ease forwards;
+  transform: translateY(12px);
+  animation: reveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes reveal {
@@ -102,4 +113,41 @@ body {
     transform: none;
     animation: none;
   }
+}
+
+/* ── Fade-in-up for staggered items ── */
+.fade-up {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-up {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}
+
+/* ── Scale-in for modals / drawers ── */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInBackdrop {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

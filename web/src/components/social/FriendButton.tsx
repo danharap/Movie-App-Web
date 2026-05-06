@@ -38,7 +38,7 @@ export function FriendButton({ targetId, initial }: Props) {
           type="button"
           disabled={isPending}
           onClick={() => act(() => sendFriendRequest(targetId), "pending_sent")}
-          className="rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-medium text-zinc-200 transition hover:border-amber-200/40 hover:text-white disabled:opacity-50"
+          className="rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-medium text-zinc-200 transition hover:border-indigo-400/30 hover:text-white disabled:opacity-50"
         >
           + Add friend
         </button>
@@ -59,7 +59,7 @@ export function FriendButton({ targetId, initial }: Props) {
             type="button"
             disabled={isPending}
             onClick={() => act(() => acceptFriendRequest(targetId), "accepted")}
-            className="rounded-full bg-amber-200/90 px-4 py-1.5 text-xs font-semibold text-zinc-950 transition hover:bg-amber-200 disabled:opacity-50"
+            className="rounded-full bg-indigo-500 px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-300 disabled:opacity-50"
           >
             Accept
           </button>

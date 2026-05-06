@@ -24,7 +24,7 @@ export default async function FriendsPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
       <header className="mb-8 space-y-1">
-        <p className="text-xs font-medium uppercase tracking-[0.2em] text-amber-200/70">
+        <p className="text-xs font-medium uppercase tracking-[0.2em] text-indigo-300/70">
           Social
         </p>
         <h1 className="text-3xl font-semibold text-white">Friends</h1>
@@ -35,7 +35,7 @@ export default async function FriendsPage() {
         <section className="mb-10">
           <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-white">
             Friend Requests
-            <span className="rounded-full bg-amber-200/20 px-2 py-0.5 text-xs text-amber-200/90">
+            <span className="rounded-full bg-indigo-400/20 px-2 py-0.5 text-xs text-indigo-300">
               {pending.length}
             </span>
           </h2>
@@ -45,7 +45,7 @@ export default async function FriendsPage() {
               return (
                 <li
                   key={p.id}
-                  className="flex items-center gap-3 rounded-xl border border-amber-200/15 bg-zinc-900/40 p-3"
+                  className="flex items-center gap-3 rounded-xl border border-indigo-400/12 bg-zinc-900/40 p-3"
                 >
                   <Link href={`/user/${p.username ?? p.id}`}>
                     <Avatar url={p.avatar_url} name={name} size={40} />
@@ -53,7 +53,7 @@ export default async function FriendsPage() {
                   <div className="min-w-0 flex-1">
                     <Link
                       href={`/user/${p.username ?? p.id}`}
-                      className="block truncate text-sm font-medium text-white hover:text-amber-100"
+                      className="block truncate text-sm font-medium text-white hover:text-indigo-200"
                     >
                       {name}
                     </Link>
@@ -106,7 +106,7 @@ export default async function FriendsPage() {
                   <div className="min-w-0 flex-1">
                     <Link
                       href={`/user/${f.username ?? f.id}`}
-                      className="block truncate text-sm font-medium text-white hover:text-amber-100"
+                      className="block truncate text-sm font-medium text-white hover:text-indigo-200"
                     >
                       {name}
                     </Link>

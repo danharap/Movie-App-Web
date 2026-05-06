@@ -4,6 +4,7 @@ import { addToWatchlist, markWatched } from "@/app/actions/library";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 type ExistingEntry = {
   user_rating: number | null;
@@ -24,24 +25,15 @@ export function MovieActions({ tmdbId, isLoggedIn, existing }: Props) {
   const [showRateForm, setShowRateForm] = useState(false);
   const [rating, setRating] = useState<number>(existing?.user_rating ?? 0);
   const [notes, setNotes] = useState(existing?.notes ?? "");
-  const [message, setMessage] = useState<string | null>(null);
-  const [messageKind, setMessageKind] = useState<"ok" | "err">("ok");
-
-  function flash(msg: string, kind: "ok" | "err" = "ok") {
-    setMessage(msg);
-    setMessageKind(kind);
-    setTimeout(() => setMessage(null), 3000);
-  }
 
   function run(action: () => Promise<void>, successMsg = "Saved.") {
-    setMessage(null);
     startTransition(async () => {
       try {
         await action();
-        flash(successMsg);
+        toast.success(successMsg);
         router.refresh();
       } catch (e) {
-        flash(e instanceof Error ? e.message : "Something went wrong.", "err");
+        toast.error(e instanceof Error ? e.message : "Something went wrong.");
       }
     });
   }
@@ -51,13 +43,13 @@ export function MovieActions({ tmdbId, isLoggedIn, existing }: Props) {
       <div className="mt-10 flex flex-wrap items-center justify-center gap-3 md:justify-start">
         <Link
           href={`/login?redirect=/movie/${tmdbId}`}
-          className="rounded-full bg-white/10 px-5 py-2.5 text-sm font-medium text-white hover:bg-white/15"
+          className="rounded-full bg-indigo-500/15 px-5 py-2.5 text-sm font-medium text-indigo-200 transition hover:bg-indigo-500/25"
         >
           Sign in to log / rate
         </Link>
         <Link
           href="/recommend"
-          className="rounded-full px-5 py-2.5 text-sm text-zinc-500 hover:text-zinc-300"
+          className="rounded-full px-5 py-2.5 text-sm text-zinc-500 transition hover:text-zinc-300"
         >
           Find similar
         </Link>
@@ -75,41 +67,43 @@ export function MovieActions({ tmdbId, isLoggedIn, existing }: Props) {
           onClick={() => setShowRateForm((p) => !p)}
           className={`rounded-full px-5 py-2.5 text-sm font-medium transition disabled:opacity-50 ${
             existing
-              ? "border border-amber-200/40 bg-amber-200/10 text-amber-100 hover:bg-amber-200/20"
-              : "bg-white/10 text-white hover:bg-white/15"
+              ? "border border-indigo-400/30 bg-indigo-400/10 text-indigo-200 hover:bg-indigo-400/20"
+              : "bg-indigo-500/15 text-indigo-200 hover:bg-indigo-500/25"
           }`}
         >
-          {existing ? `Logged · ${existing.user_rating ? `${existing.user_rating}/10` : "no rating"}` : "Log / Rate"}
+          {existing
+            ? `Logged · ${existing.user_rating ? `${existing.user_rating}/10` : "no rating"}`
+            : "Log / Rate"}
         </button>
 
         <button
           type="button"
           disabled={isPending}
           onClick={() => run(() => addToWatchlist(tmdbId), "Added to watchlist.")}
-          className="rounded-full border border-white/15 px-5 py-2.5 text-sm text-zinc-200 transition hover:border-amber-200/40 hover:text-white disabled:opacity-50"
+          className="rounded-full border border-white/10 px-5 py-2.5 text-sm text-zinc-300 transition hover:border-indigo-400/30 hover:text-white disabled:opacity-50"
         >
           Watchlist
         </button>
 
         <Link
           href="/recommend"
-          className="rounded-full px-5 py-2.5 text-sm text-zinc-500 hover:text-zinc-300"
+          className="rounded-full px-5 py-2.5 text-sm text-zinc-500 transition hover:text-zinc-300"
         >
           Find similar
         </Link>
       </div>
 
-      {/* Rate form */}
+      {/* Rate / log form */}
       {showRateForm ? (
-        <div className="rounded-2xl border border-white/10 bg-zinc-900/60 p-5 space-y-4">
+        <div className="rounded-2xl border border-white/[0.08] bg-zinc-900/70 p-5 space-y-4 backdrop-blur-sm">
           <p className="text-sm font-medium text-zinc-300">
             {existing ? "Update your log" : "Log this film"}
           </p>
 
-          {/* 1–10 star/number rating */}
-          <div className="space-y-1">
+          {/* 1–10 rating */}
+          <div className="space-y-2">
             <p className="text-xs text-zinc-500">Your rating (optional)</p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {RATING_OPTIONS.map((n) => (
                 <button
                   key={n}
@@ -117,14 +111,19 @@ export function MovieActions({ tmdbId, isLoggedIn, existing }: Props) {
                   onClick={() => setRating((prev) => (prev === n ? 0 : n))}
                   className={`h-9 w-9 rounded-lg border text-sm font-semibold transition ${
                     rating === n
-                      ? "border-amber-200/50 bg-amber-200/15 text-amber-100"
-                      : "border-white/10 text-zinc-500 hover:border-white/25 hover:text-zinc-300"
+                      ? "border-indigo-400/40 bg-indigo-400/15 text-indigo-200"
+                      : "border-white/[0.08] text-zinc-500 hover:border-white/20 hover:text-zinc-300"
                   }`}
                 >
                   {n}
                 </button>
               ))}
             </div>
+            {rating > 0 && (
+              <p className="text-xs text-indigo-300/70">
+                {rating}/10 selected
+              </p>
+            )}
           </div>
 
           {/* Notes */}
@@ -138,7 +137,7 @@ export function MovieActions({ tmdbId, isLoggedIn, existing }: Props) {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Thoughts, watch date, who you watched with…"
-              className="w-full resize-none rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none placeholder:text-zinc-600 focus:ring-2 focus:ring-amber-200/30"
+              className="w-full resize-none rounded-xl border border-white/[0.08] bg-black/30 px-3 py-2 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-indigo-400/30 focus:ring-2 focus:ring-indigo-400/20 transition"
             />
           </div>
 
@@ -154,31 +153,22 @@ export function MovieActions({ tmdbId, isLoggedIn, existing }: Props) {
                       rating > 0 ? rating : null,
                       notes.trim() || null,
                     ),
-                  existing ? "Log updated." : "Logged!",
+                  existing ? "Log updated." : "Movie logged to your diary.",
                 )
               }
-              className="rounded-full bg-amber-200/90 px-5 py-2.5 text-sm font-semibold text-zinc-950 transition hover:bg-amber-200 disabled:opacity-60"
+              className="rounded-full bg-indigo-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-400 disabled:opacity-60"
             >
               {isPending ? "Saving…" : existing ? "Update" : "Save"}
             </button>
             <button
               type="button"
               onClick={() => setShowRateForm(false)}
-              className="rounded-full border border-white/15 px-4 py-2.5 text-sm text-zinc-400 hover:text-zinc-200"
+              className="rounded-full border border-white/10 px-4 py-2.5 text-sm text-zinc-400 transition hover:text-zinc-200"
             >
               Cancel
             </button>
           </div>
         </div>
-      ) : null}
-
-      {message ? (
-        <p
-          className={`text-xs ${messageKind === "ok" ? "text-emerald-400/90" : "text-red-300/90"}`}
-          role="status"
-        >
-          {message}
-        </p>
       ) : null}
     </div>
   );
