@@ -258,46 +258,40 @@ export function RecommendClient() {
       </section>
 
       <section
-        className="reveal flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+        className="reveal flex flex-col gap-2"
         style={{ animationDelay: "0.18s" }}
       >
-        <label className="flex cursor-pointer items-center gap-3 text-sm text-zinc-300">
-          <input
-            type="checkbox"
-            checked={surpriseMe}
-            onChange={(e) => setSurpriseMe(e.target.checked)}
-            className="size-4 rounded border-white/20 bg-black/40 text-amber-400 focus:ring-amber-200/40"
-          />
-          Surprise me (shuffle genre emphasis)
-        </label>
-        <label className="flex cursor-pointer items-center gap-3 text-sm text-zinc-300">
-          <input
-            type="checkbox"
-            checked={hiddenGem}
-            onChange={(e) => setHiddenGem(e.target.checked)}
-            className="size-4 rounded border-white/20 bg-black/40 text-amber-400 focus:ring-amber-200/40"
-          />
-          Prefer hidden gems (strong votes vs. hype)
-        </label>
-        <label className="flex cursor-pointer items-center gap-3 text-sm text-zinc-300">
-          <input
-            type="checkbox"
-            checked={streamingOnly}
-            onChange={(e) => setStreamingOnly(e.target.checked)}
-            className="size-4 rounded border-white/20 bg-black/40 text-amber-400 focus:ring-amber-200/40"
-          />
-          Streaming-friendly (subscription, TMDb providers)
-        </label>
+        <ToggleOption
+          checked={surpriseMe}
+          onChange={setSurpriseMe}
+          label="Mix it up"
+          description="Randomly shifts the genre weighting so you don't always get the same type of result."
+        />
+        <ToggleOption
+          checked={hiddenGem}
+          onChange={setHiddenGem}
+          label="Hidden gems only"
+          description="Favours well-rated films that flew under the radar — less blockbuster, more discovery."
+        />
+        <ToggleOption
+          checked={streamingOnly}
+          onChange={setStreamingOnly}
+          label="Available to stream"
+          description="Only show films you can watch right now on a subscription service."
+        />
         {streamingOnly ? (
-          <label className="text-sm text-zinc-400">
-            Region{" "}
-            <input
-              value={watchRegion}
-              onChange={(e) => setWatchRegion(e.target.value.toUpperCase())}
-              maxLength={2}
-              className="ml-2 w-16 rounded border border-white/10 bg-black/30 px-2 py-1 text-white"
-            />
-          </label>
+          <div className="ml-14 mt-1">
+            <label className="text-xs text-zinc-500">
+              Your region (2-letter country code)
+              <input
+                value={watchRegion}
+                onChange={(e) => setWatchRegion(e.target.value.toUpperCase())}
+                maxLength={2}
+                placeholder="e.g. US"
+                className="ml-2 w-16 rounded-lg border border-white/10 bg-black/30 px-2 py-1 text-sm text-white outline-none focus:ring-1 focus:ring-amber-200/30"
+              />
+            </label>
+          </div>
         ) : null}
       </section>
 
@@ -316,5 +310,54 @@ export function RecommendClient() {
         {loading ? "Finding films…" : "Curate my shortlist"}
       </button>
     </form>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Custom toggle option — replaces native checkboxes
+// ---------------------------------------------------------------------------
+
+function ToggleOption({
+  checked,
+  onChange,
+  label,
+  description,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  label: string;
+  description: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={`flex w-full items-start gap-4 rounded-xl border px-4 py-3 text-left transition ${
+        checked
+          ? "border-amber-200/30 bg-amber-200/8"
+          : "border-white/8 bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04]"
+      }`}
+    >
+      {/* Custom toggle pill */}
+      <div
+        className={`mt-0.5 flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors duration-200 ${
+          checked ? "bg-amber-300" : "bg-zinc-700"
+        }`}
+      >
+        <div
+          className={`h-4 w-4 rounded-full bg-white shadow transition-transform duration-200 ${
+            checked ? "translate-x-4" : "translate-x-0"
+          }`}
+        />
+      </div>
+      <div>
+        <p className={`text-sm font-medium ${checked ? "text-amber-100" : "text-zinc-300"}`}>
+          {label}
+        </p>
+        <p className="mt-0.5 text-xs leading-relaxed text-zinc-500">{description}</p>
+      </div>
+    </button>
   );
 }
