@@ -2,7 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { requireAdmin, requireRole, requireSuperAdmin, type Role } from "@/lib/admin/rbac";
+import { requireAdmin, requireSuperAdmin, type Role } from "@/lib/admin/rbac";
 import { revalidatePath } from "next/cache";
 
 // ---------------------------------------------------------------------------

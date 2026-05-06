@@ -31,7 +31,7 @@ export default async function ShowDetailPage({ params }: Props) {
   // Load show-level diary entry
   let existing: DiaryEntry | null = null;
   // Load per-season ratings: keyed by the season's own TMDb ID
-  let seasonRatings: Record<number, DiaryEntry> = {};
+  const seasonRatings: Record<number, DiaryEntry> = {};
 
   if (user) {
     const showStoredId = toTVStoredId(tmdbId);

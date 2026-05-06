@@ -55,9 +55,6 @@ const STEPS: { key: WizardStep; label: string }[] = [
 
 const STEP_ORDER: WizardStep[] = ["welcome", "upload", "preview", "matching", "summary"];
 
-function stepIndex(s: WizardStep) {
-  return STEP_ORDER.indexOf(s);
-}
 
 export function ImportWizard() {
   const [step, setStep] = useState<WizardStep>("welcome");

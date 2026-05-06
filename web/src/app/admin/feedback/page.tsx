@@ -3,7 +3,6 @@ import { DeleteFeedbackButton } from "./FeedbackActions";
 
 export const dynamic = "force-dynamic";
 
-const STARS = (n: number) => "★".repeat(n) + "☆".repeat(10 - n);
 
 export default async function AdminFeedbackPage() {
   const feedback = await getAllFeedback();

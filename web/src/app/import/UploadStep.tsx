@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState, useRef } from "react";
-import { Upload, FileArchive, FileText, Folder, X, AlertCircle, Loader2 } from "lucide-react";
+import { Upload, FileArchive, FileText, Folder, AlertCircle, Loader2 } from "lucide-react";
 import {
   parseLetterboxdZip,
   parseLetterboxdFilesWithPaths,
