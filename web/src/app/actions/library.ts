@@ -3,7 +3,7 @@
 import { getMovieDetails, getTVDetails } from "@/lib/tmdb/client";
 import { createClient } from "@/lib/supabase/server";
 import { trackServerEvent } from "@/lib/analytics/track";
-import { TV_TMDB_OFFSET, toTVStoredId, TV_SEASON_OFFSET, toTVSeasonStoredId } from "@/lib/tmdb/constants";
+import { toTVStoredId, toTVSeasonStoredId } from "@/lib/tmdb/constants";
 import { revalidatePath } from "next/cache";
 
 async function ensureMovieRow(tmdbId: number): Promise<number> {
