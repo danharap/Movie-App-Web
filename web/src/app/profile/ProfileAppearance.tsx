@@ -5,11 +5,26 @@ import { createClient } from "@/lib/supabase/client";
 import { Check, Loader2, X, ZoomIn, ZoomOut } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { createPortal } from "react-dom";
 import Cropper from "react-easy-crop";
 import type { Area } from "react-easy-crop";
 import { toast } from "sonner";
+
+export type ProfileAppearanceHandle = {
+  /** Apply pending banner/backdrop removals (call after profile Save succeeds). */
+  commitPendingRemovals: () => Promise<void>;
+  /** Discard pending removals when user cancels editing. */
+  resetPendingRemovals: () => void;
+};
 
 const BANNER_ASPECT = 21 / 9;
 const BACKDROP_ASPECT = 16 / 9;
@@ -58,20 +73,26 @@ async function cropToJpeg(
 
 type CropKind = "banner" | "backdrop";
 
-export function ProfileAppearance({
-  userId,
-  username,
-  bannerUrl: initialBanner,
-  profileBackgroundUrl: initialBg,
-  embedded = false,
-}: {
+type Props = {
   userId: string;
   username: string | null;
   bannerUrl: string | null;
   profileBackgroundUrl: string | null;
   /** When true, tighter spacing for inside Edit profile panel */
   embedded?: boolean;
-}) {
+};
+
+export const ProfileAppearance = forwardRef<ProfileAppearanceHandle, Props>(
+  function ProfileAppearance(
+    {
+      userId,
+      username,
+      bannerUrl: initialBanner,
+      profileBackgroundUrl: initialBg,
+      embedded = false,
+    },
+    ref,
+  ) {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(typeof document !== "undefined"), []);
@@ -83,6 +104,13 @@ export function ProfileAppearance({
     setBannerUrl(initialBanner);
     setBgUrl(initialBg);
   }, [initialBanner, initialBg]);
+
+  /** Embedded only: removal applies when parent saves profile */
+  const [pendingBannerRemoval, setPendingBannerRemoval] = useState(false);
+  const [pendingBackdropRemoval, setPendingBackdropRemoval] = useState(false);
+
+  const displayBannerUrl = embedded && pendingBannerRemoval ? null : bannerUrl;
+  const displayBgUrl = embedded && pendingBackdropRemoval ? null : bgUrl;
 
   const [status, setStatus] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -175,8 +203,13 @@ export function ProfileAppearance({
             : { profile_background_url: url },
         );
 
-        if (kind === "banner") setBannerUrl(url);
-        else setBgUrl(url);
+        if (kind === "banner") {
+          setBannerUrl(url);
+          setPendingBannerRemoval(false);
+        } else {
+          setBgUrl(url);
+          setPendingBackdropRemoval(false);
+        }
 
         toast.success(kind === "banner" ? "Banner saved." : "Backdrop saved.");
         setStatus(null);
@@ -190,27 +223,74 @@ export function ProfileAppearance({
     });
   }
 
-  function clear(kind: CropKind) {
+  async function persistRemove(kind: CropKind): Promise<void> {
+    const supabase = createClient();
+    const path =
+      kind === "banner" ? `${userId}/banner.jpg` : `${userId}/profile-bg.jpg`;
+    await supabase.storage.from("avatars").remove([path]).catch(() => {});
+
+    await updateProfile(
+      kind === "banner"
+        ? { banner_url: null }
+        : { profile_background_url: null },
+    );
+
+    if (kind === "banner") setBannerUrl(null);
+    else setBgUrl(null);
+
+    if (username) await revalidateUsernameProfile(username);
+  }
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      resetPendingRemovals: () => {
+        setPendingBannerRemoval(false);
+        setPendingBackdropRemoval(false);
+      },
+      commitPendingRemovals: async () => {
+        if (!embedded) return;
+        const removeBanner = pendingBannerRemoval;
+        const removeBackdrop = pendingBackdropRemoval;
+        if (!removeBanner && !removeBackdrop) return;
+        try {
+          if (removeBanner) {
+            await persistRemove("banner");
+            setPendingBannerRemoval(false);
+          }
+          if (removeBackdrop) {
+            await persistRemove("backdrop");
+            setPendingBackdropRemoval(false);
+          }
+          let msg = "Removed.";
+          if (removeBanner && removeBackdrop) msg = "Banner and backdrop removed.";
+          else if (removeBanner) msg = "Banner removed.";
+          else if (removeBackdrop) msg = "Backdrop removed.";
+          toast.success(msg);
+          router.refresh();
+        } catch (e) {
+          const err = e instanceof Error ? e.message : "Could not remove images.";
+          toast.error(err);
+          throw e;
+        }
+      },
+    }),
+    [embedded, pendingBannerRemoval, pendingBackdropRemoval, userId, username, router],
+  );
+
+  function requestRemove(kind: CropKind) {
+    if (embedded) {
+      if (kind === "banner") setPendingBannerRemoval(true);
+      else setPendingBackdropRemoval(true);
+      setStatus(null);
+      return;
+    }
     setStatus(null);
     startTransition(async () => {
       try {
-        const supabase = createClient();
-        const path =
-          kind === "banner" ? `${userId}/banner.jpg` : `${userId}/profile-bg.jpg`;
-        await supabase.storage.from("avatars").remove([path]).catch(() => {});
-
-        await updateProfile(
-          kind === "banner"
-            ? { banner_url: null }
-            : { profile_background_url: null },
-        );
-
-        if (kind === "banner") setBannerUrl(null);
-        else setBgUrl(null);
-
+        await persistRemove(kind);
         toast.success(kind === "banner" ? "Banner removed." : "Backdrop removed.");
         setStatus(null);
-        if (username) await revalidateUsernameProfile(username);
         router.refresh();
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Could not remove.";
@@ -357,10 +437,14 @@ export function ProfileAppearance({
         <div className="mt-3 grid max-w-full gap-4 sm:grid-cols-2">
           <div className="min-w-0 space-y-2">
             <p className="text-xs font-medium text-zinc-400">Banner · 21∶9</p>
-            <div className="relative aspect-[21/9] w-full max-h-[120px] overflow-hidden rounded-lg border border-white/10 bg-zinc-900/80 sm:max-h-none sm:rounded-xl">
-              {bannerUrl ? (
+            <div
+              className={`relative aspect-[21/9] w-full max-h-[120px] overflow-hidden rounded-lg border bg-zinc-900/80 sm:max-h-none sm:rounded-xl ${
+                embedded && pendingBannerRemoval ? "border-amber-500/40" : "border-white/10"
+              }`}
+            >
+              {displayBannerUrl ? (
                 <Image
-                  src={bannerUrl}
+                  src={displayBannerUrl}
                   alt=""
                   fill
                   className="object-cover"
@@ -368,8 +452,15 @@ export function ProfileAppearance({
                   unoptimized
                 />
               ) : (
-                <div className="flex h-full items-center justify-center px-2 text-center text-[10px] text-zinc-600">
-                  Preview after upload
+                <div className="flex h-full flex-col items-center justify-center gap-1 px-2 text-center text-[10px] text-zinc-600">
+                  {embedded && pendingBannerRemoval ? (
+                    <>
+                      <span className="text-amber-200/90">Will remove when you save profile</span>
+                      <span className="text-zinc-600">(or tap Undo remove)</span>
+                    </>
+                  ) : (
+                    "Preview after upload"
+                  )}
                 </div>
               )}
             </div>
@@ -389,11 +480,20 @@ export function ProfileAppearance({
               >
                 Upload banner
               </button>
-              {bannerUrl ? (
+              {embedded && pendingBannerRemoval ? (
                 <button
                   type="button"
                   disabled={isPending}
-                  onClick={() => clear("banner")}
+                  onClick={() => setPendingBannerRemoval(false)}
+                  className="min-h-[40px] rounded-full border border-white/15 px-3 py-2 text-xs text-zinc-300 hover:bg-white/5 disabled:opacity-50"
+                >
+                  Undo remove
+                </button>
+              ) : bannerUrl ? (
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={() => requestRemove("banner")}
                   className="min-h-[40px] rounded-full px-3 py-2 text-xs text-zinc-500 hover:text-zinc-300 disabled:opacity-50"
                 >
                   Remove
@@ -404,10 +504,14 @@ export function ProfileAppearance({
 
           <div className="min-w-0 space-y-2">
             <p className="text-xs font-medium text-zinc-400">Page background · 16∶9</p>
-            <div className="relative aspect-video w-full max-h-[140px] overflow-hidden rounded-lg border border-white/10 bg-zinc-900/80 sm:max-h-none sm:rounded-xl">
-              {bgUrl ? (
+            <div
+              className={`relative aspect-video w-full max-h-[140px] overflow-hidden rounded-lg border bg-zinc-900/80 sm:max-h-none sm:rounded-xl ${
+                embedded && pendingBackdropRemoval ? "border-amber-500/40" : "border-white/10"
+              }`}
+            >
+              {displayBgUrl ? (
                 <Image
-                  src={bgUrl}
+                  src={displayBgUrl}
                   alt=""
                   fill
                   className="object-cover"
@@ -415,8 +519,15 @@ export function ProfileAppearance({
                   unoptimized
                 />
               ) : (
-                <div className="flex h-full items-center justify-center px-2 text-center text-[10px] text-zinc-600">
-                  Full-page backdrop behind content
+                <div className="flex h-full flex-col items-center justify-center gap-1 px-2 text-center text-[10px] text-zinc-600">
+                  {embedded && pendingBackdropRemoval ? (
+                    <>
+                      <span className="text-amber-200/90">Will remove when you save profile</span>
+                      <span className="text-zinc-600">(or tap Undo remove)</span>
+                    </>
+                  ) : (
+                    "Full-page backdrop behind content"
+                  )}
                 </div>
               )}
             </div>
@@ -436,11 +547,20 @@ export function ProfileAppearance({
               >
                 Upload backdrop
               </button>
-              {bgUrl ? (
+              {embedded && pendingBackdropRemoval ? (
                 <button
                   type="button"
                   disabled={isPending}
-                  onClick={() => clear("backdrop")}
+                  onClick={() => setPendingBackdropRemoval(false)}
+                  className="min-h-[40px] rounded-full border border-white/15 px-3 py-2 text-xs text-zinc-300 hover:bg-white/5 disabled:opacity-50"
+                >
+                  Undo remove
+                </button>
+              ) : bgUrl ? (
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={() => requestRemove("backdrop")}
                   className="min-h-[40px] rounded-full px-3 py-2 text-xs text-zinc-500 hover:text-zinc-300 disabled:opacity-50"
                 >
                   Remove
@@ -461,4 +581,6 @@ export function ProfileAppearance({
       {mounted && cropModal ? createPortal(cropModal, document.body) : null}
     </>
   );
-}
+});
+
+ProfileAppearance.displayName = "ProfileAppearance";

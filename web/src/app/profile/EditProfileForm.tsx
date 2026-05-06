@@ -1,8 +1,11 @@
 "use client";
 
 import { updateProfile } from "@/app/actions/social";
-import { ProfileAppearance } from "./ProfileAppearance";
-import { useState, useTransition } from "react";
+import {
+  ProfileAppearance,
+  type ProfileAppearanceHandle,
+} from "./ProfileAppearance";
+import { useRef, useState, useTransition } from "react";
 
 type Props = {
   userId: string;
@@ -34,6 +37,7 @@ export function EditProfileForm({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const appearanceRef = useRef<ProfileAppearanceHandle>(null);
 
   function save() {
     setError(null);
@@ -47,11 +51,22 @@ export function EditProfileForm({
           is_public: isPublicVal,
           watchlist_public: watchlistPublicVal,
         });
-        setSuccess(true);
-        setOpen(false);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Save failed.");
+        return;
       }
+      try {
+        await appearanceRef.current?.commitPendingRemovals();
+      } catch (e) {
+        setError(
+          e instanceof Error
+            ? e.message
+            : "Profile saved, but banner/backdrop could not be removed. Try again.",
+        );
+        return;
+      }
+      setSuccess(true);
+      setOpen(false);
     });
   }
 
@@ -153,6 +168,7 @@ export function EditProfileForm({
       </div>
 
       <ProfileAppearance
+        ref={appearanceRef}
         userId={userId}
         username={username}
         bannerUrl={bannerUrl}
@@ -177,7 +193,10 @@ export function EditProfileForm({
         </button>
         <button
           type="button"
-          onClick={() => setOpen(false)}
+          onClick={() => {
+            appearanceRef.current?.resetPendingRemovals();
+            setOpen(false);
+          }}
           className="rounded-full border border-white/10 px-5 py-2 text-xs text-zinc-400 hover:text-white"
         >
           Cancel
