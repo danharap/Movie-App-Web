@@ -387,7 +387,24 @@ export async function parseLetterboxdFiles(
 ): Promise<ParsedImport> {
   const csvInputs: CsvFileInput[] = await Promise.all(
     files.map(async (file) => ({
-      path: file.name,
+      path: (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name,
+      text: await file.text(),
+    })),
+  );
+  return mergeLetterboxdCsvs(csvInputs);
+}
+
+/**
+ * Parse CSV files where the caller supplies an explicit path for each file.
+ * Used when files come from a folder picker (webkitRelativePath) or a
+ * recursive directory read so that type detection works correctly.
+ */
+export async function parseLetterboxdFilesWithPaths(
+  inputs: Array<{ file: File; path: string }>,
+): Promise<ParsedImport> {
+  const csvInputs: CsvFileInput[] = await Promise.all(
+    inputs.map(async ({ file, path }) => ({
+      path,
       text: await file.text(),
     })),
   );
