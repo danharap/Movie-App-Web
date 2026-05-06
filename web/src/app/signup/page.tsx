@@ -3,9 +3,26 @@ import Link from "next/link";
 
 type Props = { searchParams: Promise<{ error?: string; message?: string }> };
 
+/** Friendlier copy for Supabase auth errors users hit during QA / multi-account signup */
+function formatSignupError(raw: string): string {
+  const lower = raw.toLowerCase();
+  if (lower.includes("rate limit") && lower.includes("email")) {
+    return (
+      "Too many confirmation emails were sent recently from this app (Supabase email rate limit). " +
+      "Wait about an hour and try again, or in Supabase: Authentication → Emails / SMTP use a custom mail provider for higher limits."
+    );
+  }
+  if (lower.includes("rate limit")) {
+    return (
+      "Too many auth attempts or emails right now. Please wait a little while and try again."
+    );
+  }
+  return raw;
+}
+
 export default async function SignupPage({ searchParams }: Props) {
   const q = await searchParams;
-  const err = q.error ? decodeURIComponent(q.error) : null;
+  const err = q.error ? formatSignupError(decodeURIComponent(q.error)) : null;
 
   return (
     <div className="mx-auto max-w-sm px-4 py-20 sm:px-6">
