@@ -1,4 +1,5 @@
 import { MovieActions } from "./MovieActions";
+import { Avatar } from "@/components/ui/Avatar";
 import { getMovieDetails } from "@/lib/tmdb/client";
 import { posterUrl } from "@/lib/tmdb/constants";
 import { createClient } from "@/lib/supabase/server";
@@ -27,8 +28,11 @@ export default async function MovieDetailPage({ params }: Props) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Load existing diary entry for this user + movie.
+  // Load existing diary entry + friends' ratings for this movie.
   let existing: { user_rating: number | null; notes: string | null } | null = null;
+  type FriendRating = { name: string; username: string | null; avatar_url: string | null; rating: number };
+  let friendRatings: FriendRating[] = [];
+
   if (user) {
     const { data: movieRow } = await supabase
       .from("movies")
@@ -37,18 +41,52 @@ export default async function MovieDetailPage({ params }: Props) {
       .maybeSingle();
 
     if (movieRow?.id) {
-      const { data: entry } = await supabase
-        .from("watched_movies")
-        .select("user_rating, notes")
-        .eq("user_id", user.id)
-        .eq("movie_id", movieRow.id)
-        .maybeSingle();
+      const [{ data: entry }, { data: friendRows }] = await Promise.all([
+        supabase
+          .from("watched_movies")
+          .select("user_rating, notes")
+          .eq("user_id", user.id)
+          .eq("movie_id", movieRow.id)
+          .maybeSingle(),
+        // Friends who watched this movie and left a rating
+        supabase
+          .from("friendships")
+          .select(
+            "requester_id, addressee_id",
+          )
+          .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`)
+          .eq("status", "accepted"),
+      ]);
 
       if (entry) {
         existing = {
           user_rating: entry.user_rating as number | null,
           notes: entry.notes as string | null,
         };
+      }
+
+      if (friendRows && friendRows.length > 0) {
+        const friendIds = friendRows.map((f) =>
+          f.requester_id === user.id ? f.addressee_id : f.requester_id,
+        );
+        const { data: ratingsRows } = await supabase
+          .from("watched_movies")
+          .select(
+            "user_id, user_rating, profiles!watched_movies_user_id_fkey(display_name, username, avatar_url)",
+          )
+          .eq("movie_id", movieRow.id)
+          .in("user_id", friendIds)
+          .not("user_rating", "is", null);
+
+        friendRatings = (ratingsRows ?? []).map((r) => {
+          const p = (r.profiles as unknown) as { display_name: string | null; username: string | null; avatar_url: string | null } | null;
+          return {
+            name: p?.display_name?.trim() || p?.username || "Friend",
+            username: p?.username ?? null,
+            avatar_url: p?.avatar_url ?? null,
+            rating: r.user_rating as number,
+          };
+        });
       }
     }
   }
@@ -131,6 +169,30 @@ export default async function MovieDetailPage({ params }: Props) {
           <div className="mt-6 rounded-xl border border-white/10 bg-zinc-900/40 px-4 py-3">
             <p className="text-xs text-zinc-500">Your notes</p>
             <p className="mt-1 text-sm leading-relaxed text-zinc-300">{existing.notes}</p>
+          </div>
+        ) : null}
+
+        {/* Friends' ratings */}
+        {friendRatings.length > 0 ? (
+          <div className="mt-8 rounded-2xl border border-white/10 bg-zinc-900/30 p-4">
+            <p className="mb-3 text-xs font-medium text-zinc-400">
+              Friends who watched this
+            </p>
+            <div className="flex flex-wrap gap-3">
+              {friendRatings.map((f) => (
+                <Link
+                  key={f.name}
+                  href={f.username ? `/user/${f.username}` : "#"}
+                  className="flex items-center gap-2 rounded-xl border border-white/5 bg-black/20 px-3 py-2 transition hover:border-white/10"
+                >
+                  <Avatar url={f.avatar_url} name={f.name} size={28} />
+                  <div>
+                    <p className="text-xs font-medium text-white">{f.name}</p>
+                    <p className="text-xs text-amber-200/80">{f.rating}/10</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         ) : null}
 

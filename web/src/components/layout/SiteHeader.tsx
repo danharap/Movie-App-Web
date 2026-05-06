@@ -3,12 +3,15 @@ import { APP_NAME } from "@/config/brand";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
-const links = [
+const publicLinks = [
   { href: "/recommend", label: "Find a film" },
   { href: "/browse", label: "Browse" },
+];
+
+const authedLinks = [
   { href: "/watchlist", label: "Watchlist" },
   { href: "/watched", label: "Watched" },
-  { href: "/feedback", label: "Reviews" },
+  { href: "/friends", label: "Friends" },
   { href: "/profile", label: "Profile" },
 ];
 
@@ -29,7 +32,7 @@ export async function SiteHeader() {
           <span className="text-zinc-400"> — pick fast</span>
         </Link>
         <nav className="flex flex-wrap items-center gap-1 sm:flex-1 sm:justify-center">
-          {links.map((l) => (
+          {publicLinks.map((l) => (
             <Link
               key={l.href}
               href={l.href}
@@ -38,6 +41,17 @@ export async function SiteHeader() {
               {l.label}
             </Link>
           ))}
+          {user
+            ? authedLinks.map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className="rounded-full px-3 py-1.5 text-xs text-zinc-300 transition hover:bg-white/5 hover:text-white sm:text-sm"
+                >
+                  {l.label}
+                </Link>
+              ))
+            : null}
         </nav>
         <div className="flex flex-wrap items-center justify-end gap-2">
           {user ? (

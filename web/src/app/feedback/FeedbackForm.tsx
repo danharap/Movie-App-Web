@@ -7,11 +7,13 @@ import type { AppFeedbackRow } from "@/features/feedback/schema";
 
 type Props = {
   existing: AppFeedbackRow | null;
+  /** Compact mode hides the outer card border — used when embedded inside another card */
+  compact?: boolean;
 };
 
 const STARS = [1, 2, 3, 4, 5] as const;
 
-export function FeedbackForm({ existing }: Props) {
+export function FeedbackForm({ existing, compact = false }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isDeleting, startDeleteTransition] = useTransition();
@@ -24,7 +26,7 @@ export function FeedbackForm({ existing }: Props) {
 
   if (!editing && existing) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-zinc-900/40 p-5 space-y-3">
+      <div className={compact ? "space-y-3" : "rounded-2xl border border-white/10 bg-zinc-900/40 p-5 space-y-3"}>
         <div className="flex items-center justify-between">
           <p className="text-sm font-medium text-zinc-300">Your review</p>
           <div className="flex gap-2">
@@ -95,7 +97,7 @@ export function FeedbackForm({ existing }: Props) {
   return (
     <form
       onSubmit={onSubmit}
-      className="rounded-2xl border border-white/10 bg-zinc-900/40 p-5 space-y-4"
+      className={compact ? "space-y-4" : "rounded-2xl border border-white/10 bg-zinc-900/40 p-5 space-y-4"}
     >
       <p className="text-sm font-medium text-zinc-300">
         {existing ? "Update your review" : "Leave a review"}
