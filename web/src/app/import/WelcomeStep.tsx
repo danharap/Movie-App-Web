@@ -128,22 +128,22 @@ const slides = [
           Database) and find the matching entry for each film.
         </p>
         <div className="space-y-2">
-          <div className="flex items-start gap-2 rounded-lg bg-green-500/10 p-3 text-sm">
-            <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-green-400" />
+          <div className="flex items-center gap-2 rounded-lg bg-green-500/10 p-3 text-sm">
+            <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-green-400" />
             <span>
               <strong className="text-green-300">Exact match</strong> — title and year align
               perfectly. These are imported automatically.
             </span>
           </div>
-          <div className="flex items-start gap-2 rounded-lg bg-amber-500/10 p-3 text-sm">
-            <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-amber-400" />
+          <div className="flex items-center gap-2 rounded-lg bg-amber-500/10 p-3 text-sm">
+            <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-amber-400" />
             <span>
-              <strong className="text-indigo-400">Close match</strong> — title matches but year
+              <strong className="text-amber-300">Close match</strong> — title matches but year
               is off by one (common with international releases). You&apos;ll confirm these.
             </span>
           </div>
-          <div className="flex items-start gap-2 rounded-lg bg-red-500/10 p-3 text-sm">
-            <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-red-400" />
+          <div className="flex items-center gap-2 rounded-lg bg-red-500/10 p-3 text-sm">
+            <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-red-400" />
             <span>
               <strong className="text-red-300">No match</strong> — we couldn&apos;t find it
               automatically. You can pick from candidates or skip.

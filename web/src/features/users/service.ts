@@ -16,6 +16,22 @@ export type FriendshipStatus =
   | "pending_received"
   | "accepted";
 
+export type SocialActivityItem = {
+  watched_at: string | null;
+  user_rating: number | null;
+  movie: {
+    tmdb_id: number;
+    title: string;
+    poster_path: string | null;
+  } | null;
+  user: {
+    id: string;
+    username: string | null;
+    display_name: string | null;
+    avatar_url: string | null;
+  } | null;
+};
+
 /** Search public profiles by username prefix */
 export async function searchUsers(
   query: string,
@@ -167,6 +183,90 @@ export async function getPendingRequests(userId: string): Promise<
     });
   } catch (e) {
     console.error("[users] getPendingRequests:", e);
+    return [];
+  }
+}
+
+/** Recent watched activity from accepted friends + followed users */
+export async function getSocialActivity(
+  userId: string,
+  limit = 24,
+): Promise<SocialActivityItem[]> {
+  try {
+    const supabase = await createClient();
+
+    const [{ data: friendships }, { data: follows }] = await Promise.all([
+      supabase
+        .from("friendships")
+        .select("requester_id, addressee_id")
+        .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`)
+        .eq("status", "accepted"),
+      supabase
+        .from("follows")
+        .select("following_id")
+        .eq("follower_id", userId),
+    ]);
+
+    const socialIds = new Set<string>();
+    for (const f of friendships ?? []) {
+      socialIds.add(f.requester_id === userId ? f.addressee_id : f.requester_id);
+    }
+    for (const f of follows ?? []) {
+      if (f.following_id !== userId) socialIds.add(f.following_id);
+    }
+
+    const ids = [...socialIds];
+    if (ids.length === 0) return [];
+
+    const { data: rows, error } = await supabase
+      .from("watched_movies")
+      .select(
+        "watched_at, user_rating, user_id, movies!watched_movies_movie_id_fkey(tmdb_id, title, poster_path), profiles!watched_movies_user_id_fkey(id, username, display_name, avatar_url)",
+      )
+      .in("user_id", ids)
+      .order("watched_at", { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error("[users] getSocialActivity:", error.code, error.message);
+      return [];
+    }
+
+    return (rows ?? []).map((r) => {
+      const movieRaw = r.movies as
+        | { tmdb_id: number; title: string; poster_path: string | null }
+        | { tmdb_id: number; title: string; poster_path: string | null }[]
+        | null;
+      const movie = Array.isArray(movieRaw) ? movieRaw[0] : movieRaw;
+
+      const userRaw = r.profiles as
+        | { id: string; username: string | null; display_name: string | null; avatar_url: string | null }
+        | { id: string; username: string | null; display_name: string | null; avatar_url: string | null }[]
+        | null;
+      const actor = Array.isArray(userRaw) ? userRaw[0] : userRaw;
+
+      return {
+        watched_at: r.watched_at as string | null,
+        user_rating: r.user_rating as number | null,
+        movie: movie
+          ? {
+              tmdb_id: movie.tmdb_id,
+              title: movie.title,
+              poster_path: movie.poster_path,
+            }
+          : null,
+        user: actor
+          ? {
+              id: actor.id,
+              username: actor.username,
+              display_name: actor.display_name,
+              avatar_url: actor.avatar_url,
+            }
+          : null,
+      };
+    });
+  } catch (e) {
+    console.error("[users] getSocialActivity unexpected:", e);
     return [];
   }
 }

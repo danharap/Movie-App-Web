@@ -1,8 +1,10 @@
 import { UserSearch } from "./UserSearch";
 import { FriendButton } from "@/components/social/FriendButton";
 import { Avatar } from "@/components/ui/Avatar";
-import { getFriends, getPendingRequests } from "@/features/users/service";
+import { getFriends, getPendingRequests, getSocialActivity } from "@/features/users/service";
+import { posterUrl } from "@/lib/tmdb/constants";
 import { createClient } from "@/lib/supabase/server";
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -16,9 +18,10 @@ export default async function FriendsPage() {
 
   if (!user) redirect("/login?redirect=/friends");
 
-  const [friends, pending] = await Promise.all([
+  const [friends, pending, activity] = await Promise.all([
     getFriends(user.id),
     getPendingRequests(user.id),
+    getSocialActivity(user.id, 18),
   ]);
 
   return (
@@ -78,6 +81,79 @@ export default async function FriendsPage() {
           Find People
         </h2>
         <UserSearch />
+      </section>
+
+      {/* Friends / Following recent activity */}
+      <section className="mb-10">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-white">Recent Activity</h2>
+          <span className="text-xs text-zinc-500">
+            Friends + people you follow
+          </span>
+        </div>
+        {activity.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-white/15 bg-zinc-900/30 px-6 py-10 text-center">
+            <p className="text-sm text-zinc-400">
+              No recent activity yet.
+            </p>
+            <p className="mt-1 text-xs text-zinc-500">
+              Once friends log movies, you'll see their latest watches here.
+            </p>
+          </div>
+        ) : (
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {activity.map((item, i) => {
+              if (!item.movie || !item.user) return null;
+              const name = item.user.display_name?.trim() || item.user.username || "Friend";
+              const poster = posterUrl(item.movie.poster_path, "w342");
+              const watchedDate = item.watched_at
+                ? new Date(item.watched_at).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "2-digit",
+                  })
+                : null;
+
+              return (
+                <article
+                  key={`${item.user.id}-${item.movie.tmdb_id}-${item.watched_at ?? i}`}
+                  className="fade-up w-36 shrink-0"
+                  style={{ animationDelay: `${Math.min(i * 0.03, 0.2)}s` }}
+                >
+                  <Link
+                    href={`/movie/${item.movie.tmdb_id}`}
+                    className="group relative block aspect-[2/3] overflow-hidden rounded-xl border border-white/[0.08] bg-zinc-900"
+                  >
+                    {poster ? (
+                      <Image
+                        src={poster}
+                        alt={item.movie.title}
+                        fill
+                        className="object-cover transition duration-300 group-hover:scale-[1.03]"
+                        sizes="144px"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center p-2 text-center text-[11px] text-zinc-500">
+                        {item.movie.title}
+                      </div>
+                    )}
+                  </Link>
+                  <div className="mt-2 rounded-lg border border-white/[0.06] bg-zinc-900/50 px-2 py-1.5">
+                    <Link
+                      href={`/user/${item.user.username ?? item.user.id}`}
+                      className="block truncate text-xs font-medium text-zinc-200 hover:text-indigo-200"
+                    >
+                      {name}
+                    </Link>
+                    <p className="mt-0.5 text-[11px] text-zinc-500">
+                      {item.user_rating != null ? `${item.user_rating}/10` : "Logged"}
+                      {watchedDate ? ` · ${watchedDate}` : ""}
+                    </p>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {/* Friends list */}

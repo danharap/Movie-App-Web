@@ -263,12 +263,10 @@ export default async function ProfilePage() {
       </div>
 
       {/* ── Stats ── */}
-      <div className="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="mb-10 grid grid-cols-2 gap-3">
         {[
           { label: "Films", value: stats.totalWatched },
           { label: "Avg Rating", value: stats.avgRating != null ? `${stats.avgRating.toFixed(1)}` : "—" },
-          { label: "Following", value: stats.following },
-          { label: "Followers", value: stats.followers },
         ].map(({ label, value }) => (
           <div key={label} className="rounded-2xl border border-white/[0.07] bg-zinc-900/40 px-4 py-5 text-center">
             <p className="text-2xl font-bold text-white">{value}</p>
