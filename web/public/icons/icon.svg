@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" fill="#09090b"/>
+  <!-- Film strip left bar -->
+  <rect x="72" y="152" width="48" height="208" rx="8" fill="#27272a"/>
+  <!-- Film strip right bar -->
+  <rect x="392" y="152" width="48" height="208" rx="8" fill="#27272a"/>
+  <!-- Film perforations left -->
+  <rect x="80" y="168" width="32" height="24" rx="4" fill="#3f3f46"/>
+  <rect x="80" y="208" width="32" height="24" rx="4" fill="#3f3f46"/>
+  <rect x="80" y="248" width="32" height="24" rx="4" fill="#3f3f46"/>
+  <rect x="80" y="288" width="32" height="24" rx="4" fill="#3f3f46"/>
+  <rect x="80" y="320" width="32" height="24" rx="4" fill="#3f3f46"/>
+  <!-- Film perforations right -->
+  <rect x="400" y="168" width="32" height="24" rx="4" fill="#3f3f46"/>
+  <rect x="400" y="208" width="32" height="24" rx="4" fill="#3f3f46"/>
+  <rect x="400" y="248" width="32" height="24" rx="4" fill="#3f3f46"/>
+  <rect x="400" y="288" width="32" height="24" rx="4" fill="#3f3f46"/>
+  <rect x="400" y="320" width="32" height="24" rx="4" fill="#3f3f46"/>
+  <!-- Center spark/star -->
+  <path d="M256 170 L272 228 L332 244 L272 260 L256 318 L240 260 L180 244 L240 228 Z" fill="#fde68a"/>
+  <!-- Small accent star -->
+  <path d="M316 186 L321 203 L339 208 L321 213 L316 230 L311 213 L293 208 L311 203 Z" fill="#fbbf24" opacity="0.7"/>
+</svg>

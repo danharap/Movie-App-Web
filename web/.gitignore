@@ -17,6 +17,13 @@
 /.next/
 /out/
 
+# PWA generated service-worker files (rebuilt on every prod build)
+/public/sw.js
+/public/workbox-*.js
+/public/sw.js.map
+/public/workbox-*.js.map
+/public/swe-worker-*.js
+
 # production
 /build
 
