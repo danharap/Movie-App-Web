@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { CheckCircle2, Film, List, XCircle, Loader2, AlertCircle, Heart, RefreshCw, AlertTriangle } from "lucide-react";
+import { CheckCircle2, Film, List, XCircle, Loader2, AlertCircle, Heart, AlertTriangle } from "lucide-react";
 import type { MatchedData } from "./MatchingStep";
 import type { SaveResponseBody } from "@/app/api/import/save/route";
 
@@ -24,8 +24,6 @@ export function SummaryStep({ matchedData, onStartOver }: SummaryStepProps) {
   const [saveProgress, setSaveProgress] = useState(0);
   const [saveResult, setSaveResult] = useState<SaveResponseBody | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [fixRatingsStatus, setFixRatingsStatus] = useState<"idle" | "running" | "done" | "error">("idle");
-  const [fixRatingsCount, setFixRatingsCount] = useState(0);
   const hasChecked = useRef(false);
 
   // Step 1: check for duplicates
@@ -95,18 +93,6 @@ export function SummaryStep({ matchedData, onStartOver }: SummaryStepProps) {
       clearInterval(progressInterval);
       setError(err instanceof Error ? err.message : "Import failed");
       setPhase("error");
-    }
-  };
-
-  const handleFixRatings = async () => {
-    setFixRatingsStatus("running");
-    try {
-      const res = await fetch("/api/import/fix-ratings", { method: "POST" });
-      const data = await res.json();
-      setFixRatingsCount(data.fixed ?? 0);
-      setFixRatingsStatus("done");
-    } catch {
-      setFixRatingsStatus("error");
     }
   };
 
@@ -265,44 +251,6 @@ export function SummaryStep({ matchedData, onStartOver }: SummaryStepProps) {
             label="Liked films"
           />
         )}
-      </div>
-
-      {/* Fix existing ratings */}
-      <div className="rounded-xl border border-amber-300/20 bg-amber-300/5 p-4">
-        <div className="flex items-start gap-3">
-          <RefreshCw className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-amber-200">
-              Fix ratings from a previous import?
-            </p>
-            <p className="mt-0.5 text-xs text-zinc-500">
-              If you imported before the rating scale was fixed, your old ratings may be on the
-              0–5 scale instead of 0–10. Click below to double all ratings ≤ 5 in your library.
-            </p>
-            {fixRatingsStatus === "done" ? (
-              <p className="mt-2 text-xs font-medium text-green-400">
-                ✓ Fixed {fixRatingsCount} rating{fixRatingsCount !== 1 ? "s" : ""}
-              </p>
-            ) : fixRatingsStatus === "error" ? (
-              <p className="mt-2 text-xs text-red-400">Fix failed — try again</p>
-            ) : (
-              <button
-                onClick={handleFixRatings}
-                disabled={fixRatingsStatus === "running"}
-                className="mt-2 flex items-center gap-1.5 rounded-full bg-amber-300/20 px-3 py-1.5 text-xs font-medium text-amber-200 transition hover:bg-amber-300/30 disabled:opacity-50"
-              >
-                {fixRatingsStatus === "running" ? (
-                  <>
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    Fixing…
-                  </>
-                ) : (
-                  "Fix previous ratings"
-                )}
-              </button>
-            )}
-          </div>
-        </div>
       </div>
 
       {/* Liked films note */}
