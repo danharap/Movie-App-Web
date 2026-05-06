@@ -26,11 +26,12 @@ export function MovieActions({ tmdbId, isLoggedIn, existing }: Props) {
   const [rating, setRating] = useState<number>(existing?.user_rating ?? 0);
   const [notes, setNotes] = useState(existing?.notes ?? "");
 
-  function run(action: () => Promise<void>, successMsg = "Saved.") {
+  function run(action: () => Promise<void>, successMsg = "Saved.", onSuccess?: () => void) {
     startTransition(async () => {
       try {
         await action();
         toast.success(successMsg);
+        onSuccess?.();
         router.refresh();
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Something went wrong.");
@@ -154,6 +155,7 @@ export function MovieActions({ tmdbId, isLoggedIn, existing }: Props) {
                       notes.trim() || null,
                     ),
                   existing ? "Log updated." : "Movie logged to your diary.",
+                  () => setShowRateForm(false),
                 )
               }
               className="rounded-full bg-indigo-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-400 disabled:opacity-60"
