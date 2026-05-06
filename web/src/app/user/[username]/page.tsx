@@ -1,4 +1,5 @@
 import { FriendButton } from "@/components/social/FriendButton";
+import { FollowButton } from "@/components/social/FollowButton";
 import { Avatar } from "@/components/ui/Avatar";
 import { getProfileByUsername, getFriendshipStatus } from "@/features/users/service";
 import { posterUrl } from "@/lib/tmdb/constants";
@@ -22,6 +23,26 @@ type FavRow = {
   movies: { id: number; tmdb_id: number; title: string; poster_path: string | null } | null;
 };
 
+type ListMovieRow = {
+  id: number;
+  tmdb_id: number;
+  title: string;
+  poster_path: string | null;
+};
+
+type ListRaw = {
+  id: string;
+  name: string;
+  emoji: string | null;
+  description: string | null;
+  is_public: boolean;
+  position: number;
+  profile_list_movies: Array<{
+    position: number;
+    movies: ListMovieRow | ListMovieRow[] | null;
+  }>;
+};
+
 export default async function PublicProfilePage({
   params,
 }: {
@@ -39,43 +60,70 @@ export default async function PublicProfilePage({
 
   const isSelf = currentUser?.id === target.id;
 
-  // If same user, redirect to own profile
   if (isSelf) {
     const { redirect } = await import("next/navigation");
     redirect("/profile");
   }
 
-  const [friendshipStatus, { data: watchedRows }, { data: favouriteRows }, { data: watchlistRows }, { data: friendCount }] =
-    await Promise.all([
-      currentUser
-        ? getFriendshipStatus(currentUser.id, target.id)
-        : Promise.resolve("none" as const),
-      supabase
-        .from("watched_movies")
-        .select("user_rating, movies ( id, tmdb_id, title, poster_path, vote_average )")
-        .eq("user_id", target.id)
-        .order("watched_at", { ascending: false })
-        .limit(24),
-      supabase
-        .from("favourite_movies")
-        .select("position, movies ( id, tmdb_id, title, poster_path )")
-        .eq("user_id", target.id)
-        .order("position"),
-      // Watchlist only if public
-      target.watchlist_public
-        ? supabase
-            .from("watchlist")
-            .select("movies ( id, tmdb_id, title, poster_path )")
-            .eq("user_id", target.id)
-            .order("created_at", { ascending: false })
-            .limit(12)
-        : Promise.resolve({ data: null }),
-      supabase
-        .from("friendships")
-        .select("id", { count: "exact" })
-        .or(`requester_id.eq.${target.id},addressee_id.eq.${target.id}`)
-        .eq("status", "accepted"),
-    ]);
+  const [
+    friendshipStatus,
+    isFollowingResult,
+    { data: watchedRows },
+    { data: favouriteRows },
+    { data: watchlistRows },
+    { data: listsRows },
+    { count: followingCount },
+    { count: followersCount },
+  ] = await Promise.all([
+    currentUser
+      ? getFriendshipStatus(currentUser.id, target.id)
+      : Promise.resolve("none" as const),
+    // Is the current user following this profile?
+    currentUser
+      ? supabase
+          .from("follows")
+          .select("follower_id", { count: "exact", head: true })
+          .eq("follower_id", currentUser.id)
+          .eq("following_id", target.id)
+      : Promise.resolve({ count: 0 }),
+    supabase
+      .from("watched_movies")
+      .select("user_rating, movies ( id, tmdb_id, title, poster_path, vote_average )")
+      .eq("user_id", target.id)
+      .order("watched_at", { ascending: false })
+      .limit(48),
+    supabase
+      .from("favourite_movies")
+      .select("position, movies ( id, tmdb_id, title, poster_path )")
+      .eq("user_id", target.id)
+      .order("position"),
+    target.watchlist_public
+      ? supabase
+          .from("watchlist")
+          .select("movies ( id, tmdb_id, title, poster_path )")
+          .eq("user_id", target.id)
+          .order("created_at", { ascending: false })
+          .limit(12)
+      : Promise.resolve({ data: null }),
+    supabase
+      .from("profile_lists")
+      .select(
+        "id, name, emoji, description, is_public, position, profile_list_movies ( position, movies ( id, tmdb_id, title, poster_path ) )",
+      )
+      .eq("user_id", target.id)
+      .eq("is_public", true)
+      .order("position", { ascending: true }),
+    supabase
+      .from("follows")
+      .select("*", { count: "exact", head: true })
+      .eq("follower_id", target.id),
+    supabase
+      .from("follows")
+      .select("*", { count: "exact", head: true })
+      .eq("following_id", target.id),
+  ]);
+
+  const isFollowing = (isFollowingResult as { count: number | null }).count === 1;
 
   const watched = (watchedRows ?? []).flatMap((r) => {
     const m = r.movies as MovieRow | MovieRow[] | null;
@@ -98,6 +146,19 @@ export default async function PublicProfilePage({
       })
     : [];
 
+  const profileLists = (listsRows as ListRaw[] ?? []).map((l) => ({
+    id: l.id,
+    name: l.name,
+    emoji: l.emoji,
+    description: l.description,
+    movies: (l.profile_list_movies ?? []).flatMap((pm) => {
+      const m = pm.movies as ListMovieRow | ListMovieRow[] | null;
+      if (!m) return [];
+      const movie = Array.isArray(m) ? m[0] : m;
+      return movie ? [{ movie, position: pm.position }] : [];
+    }),
+  }));
+
   const displayName = target.display_name?.trim() || target.username || "Film fan";
 
   return (
@@ -107,7 +168,7 @@ export default async function PublicProfilePage({
       <div className="mb-10 flex flex-col items-center gap-6 sm:flex-row sm:items-start">
         <Avatar url={target.avatar_url} name={displayName} size={80} />
 
-        <div className="flex-1 space-y-2 text-center sm:text-left">
+        <div className="flex-1 space-y-3 text-center sm:text-left">
           <div>
             <h1 className="text-2xl font-bold text-white">{displayName}</h1>
             {target.username ? (
@@ -117,21 +178,37 @@ export default async function PublicProfilePage({
           {target.bio ? (
             <p className="max-w-md text-sm leading-relaxed text-zinc-400">{target.bio}</p>
           ) : null}
-          <p className="text-xs text-zinc-500">
-            <span className="font-semibold text-white">{friendCount?.length ?? 0}</span> friends ·{" "}
-            <span className="font-semibold text-white">{watched.length}</span> films watched
-          </p>
+
+          {/* Social actions */}
           {currentUser && !isSelf ? (
-            <FriendButton targetId={target.id} initial={friendshipStatus} />
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+              <FollowButton targetId={target.id} initialFollowing={isFollowing} />
+              <FriendButton targetId={target.id} initial={friendshipStatus} />
+            </div>
           ) : !currentUser ? (
             <Link
               href="/login"
               className="inline-block rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs text-zinc-300 hover:text-white"
             >
-              Sign in to add friend
+              Sign in to follow
             </Link>
           ) : null}
         </div>
+      </div>
+
+      {/* ── Stats ── */}
+      <div className="mb-10 grid grid-cols-4 gap-3">
+        {[
+          { label: "Films", value: watched.length },
+          { label: "Following", value: followingCount ?? 0 },
+          { label: "Followers", value: followersCount ?? 0 },
+          { label: "Lists", value: profileLists.length },
+        ].map(({ label, value }) => (
+          <div key={label} className="rounded-2xl border border-white/10 bg-zinc-900/40 px-4 py-5 text-center">
+            <p className="text-2xl font-bold text-white">{value}</p>
+            <p className="mt-1 text-xs text-zinc-500">{label}</p>
+          </div>
+        ))}
       </div>
 
       {/* ── Top 4 Favourites ── */}
@@ -168,20 +245,75 @@ export default async function PublicProfilePage({
         </section>
       ) : null}
 
+      {/* ── Public Lists ── */}
+      {profileLists.length > 0 && (
+        <section className="mb-12">
+          <h2 className="mb-4 text-lg font-semibold text-white">Lists</h2>
+          <div className="space-y-4">
+            {profileLists.map((list) => (
+              <div key={list.id} className="rounded-2xl border border-white/8 bg-zinc-900/40 p-4">
+                <div className="mb-3 flex items-center gap-2">
+                  <span className="text-lg">{list.emoji ?? "🎬"}</span>
+                  <div>
+                    <p className="text-sm font-semibold text-white">{list.name}</p>
+                    {list.description ? (
+                      <p className="text-xs text-zinc-500">{list.description}</p>
+                    ) : null}
+                  </div>
+                  <span className="ml-auto text-xs text-zinc-600">
+                    {list.movies.length} film{list.movies.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+                {list.movies.length > 0 && (
+                  <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-8">
+                    {list.movies
+                      .slice()
+                      .sort((a, b) => a.position - b.position)
+                      .slice(0, 16)
+                      .map(({ movie }) => {
+                        const poster = posterUrl(movie.poster_path, "w342");
+                        return (
+                          <Link
+                            key={movie.id}
+                            href={`/movie/${movie.tmdb_id}`}
+                            title={movie.title}
+                            className="group relative block aspect-[2/3] overflow-hidden rounded-lg bg-zinc-800"
+                          >
+                            {poster ? (
+                              <Image
+                                src={poster}
+                                alt={movie.title}
+                                fill
+                                className="object-cover transition group-hover:scale-[1.03]"
+                                sizes="(max-width:640px) 16vw, 10vw"
+                              />
+                            ) : null}
+                          </Link>
+                        );
+                      })}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* ── Recent Watched ── */}
       {watched.length > 0 ? (
         <section className="mb-12">
           <h2 className="mb-4 text-lg font-semibold text-white">
-            Films ({watched.length})
+            Films <span className="text-sm font-normal text-zinc-500">({watched.length})</span>
           </h2>
-          <div className="grid grid-cols-4 gap-3 sm:grid-cols-6">
+          <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 lg:grid-cols-8">
             {watched.map(({ movie, user_rating }) => {
               const poster = posterUrl(movie.poster_path, "w342");
               return (
                 <div key={movie.id} className="group relative">
                   <Link
                     href={`/movie/${movie.tmdb_id}`}
-                    className="relative block aspect-[2/3] overflow-hidden rounded-xl bg-zinc-800"
+                    title={movie.title}
+                    className="relative block aspect-[2/3] overflow-hidden rounded-lg bg-zinc-800"
                   >
                     {poster ? (
                       <Image
@@ -189,13 +321,13 @@ export default async function PublicProfilePage({
                         alt={movie.title}
                         fill
                         className="object-cover transition group-hover:scale-[1.03]"
-                        sizes="(max-width:640px) 25vw, 100px"
+                        sizes="(max-width:640px) 25vw, 12vw"
                       />
                     ) : null}
                   </Link>
                   {user_rating != null ? (
-                    <span className="absolute bottom-1.5 right-1.5 rounded-md bg-black/80 px-1.5 py-0.5 text-[10px] font-semibold text-amber-200 ring-1 ring-white/10">
-                      {user_rating}/10
+                    <span className="absolute bottom-1 right-1 rounded bg-black/80 px-1 py-0.5 text-[9px] font-semibold text-amber-200 ring-1 ring-white/10">
+                      {user_rating}
                     </span>
                   ) : null}
                 </div>
@@ -216,14 +348,14 @@ export default async function PublicProfilePage({
           <h2 className="mb-4 text-lg font-semibold text-white">
             Watchlist ({watchlist.length})
           </h2>
-          <div className="grid grid-cols-4 gap-3 sm:grid-cols-6">
+          <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
             {watchlist.map((movie) => {
               const poster = posterUrl(movie.poster_path, "w342");
               return (
                 <Link
                   key={movie.id}
                   href={`/movie/${movie.tmdb_id}`}
-                  className="group relative block aspect-[2/3] overflow-hidden rounded-xl bg-zinc-800"
+                  className="group relative block aspect-[2/3] overflow-hidden rounded-lg bg-zinc-800"
                 >
                   {poster ? (
                     <Image
@@ -231,7 +363,7 @@ export default async function PublicProfilePage({
                       alt={movie.title}
                       fill
                       className="object-cover transition group-hover:scale-[1.03]"
-                      sizes="(max-width:640px) 25vw, 100px"
+                      sizes="(max-width:640px) 25vw, 12vw"
                     />
                   ) : null}
                 </Link>
