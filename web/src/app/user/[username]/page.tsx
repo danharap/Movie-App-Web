@@ -179,6 +179,19 @@ export default async function PublicProfilePage({
             <p className="max-w-md text-sm leading-relaxed text-zinc-400">{target.bio}</p>
           ) : null}
 
+          {/* Inline stats */}
+          <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-zinc-500 sm:justify-start">
+            <span>
+              <span className="font-semibold text-white">{followingCount ?? 0}</span> following
+            </span>
+            <span>
+              <span className="font-semibold text-white">{followersCount ?? 0}</span> followers
+            </span>
+            <span>
+              <span className="font-semibold text-white">{watched.length}</span> films
+            </span>
+          </div>
+
           {/* Social actions */}
           {currentUser && !isSelf ? (
             <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
@@ -197,19 +210,19 @@ export default async function PublicProfilePage({
       </div>
 
       {/* ── Stats ── */}
-      <div className="mb-10 grid grid-cols-4 gap-3">
-        {[
-          { label: "Films", value: watched.length },
-          { label: "Following", value: followingCount ?? 0 },
-          { label: "Followers", value: followersCount ?? 0 },
-          { label: "Lists", value: profileLists.length },
-        ].map(({ label, value }) => (
-          <div key={label} className="rounded-2xl border border-white/10 bg-zinc-900/40 px-4 py-5 text-center">
-            <p className="text-2xl font-bold text-white">{value}</p>
-            <p className="mt-1 text-xs text-zinc-500">{label}</p>
-          </div>
-        ))}
-      </div>
+      {(watched.length > 0 || profileLists.length > 0) && (
+        <div className="mb-10 grid grid-cols-2 gap-3">
+          {[
+            { label: "Films", value: watched.length },
+            { label: "Lists", value: profileLists.length },
+          ].map(({ label, value }) => (
+            <div key={label} className="rounded-2xl border border-white/10 bg-zinc-900/40 px-4 py-5 text-center">
+              <p className="text-2xl font-bold text-white">{value}</p>
+              <p className="mt-1 text-xs text-zinc-500">{label}</p>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* ── Top 4 Favourites ── */}
       {favourites.some((f) => f.movie) ? (

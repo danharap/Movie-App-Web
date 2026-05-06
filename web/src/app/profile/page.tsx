@@ -238,6 +238,12 @@ export default async function ProfilePage() {
           ) : null}
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-zinc-500 sm:justify-start">
             <Link href="/friends" className="hover:text-zinc-300">
+              <span className="font-semibold text-white">{stats.following}</span> following
+            </Link>
+            <span>
+              <span className="font-semibold text-white">{stats.followers}</span> followers
+            </span>
+            <Link href="/friends" className="hover:text-zinc-300">
               <span className="font-semibold text-white">{data.friendCount}</span> friends
             </Link>
             {!isPublic ? (
@@ -257,11 +263,9 @@ export default async function ProfilePage() {
       </div>
 
       {/* ── Stats ── */}
-      <div className="mb-10 grid grid-cols-4 gap-3">
+      <div className="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-2">
         {[
           { label: "Films", value: stats.totalWatched },
-          { label: "Following", value: stats.following },
-          { label: "Followers", value: stats.followers },
           { label: "Avg Rating", value: stats.avgRating != null ? `${stats.avgRating.toFixed(1)}/10` : "—" },
         ].map(({ label, value }) => (
           <div key={label} className="rounded-2xl border border-white/10 bg-zinc-900/40 px-4 py-5 text-center">
