@@ -1,6 +1,7 @@
 import { signOut } from "@/app/actions/auth";
 import { APP_NAME } from "@/config/brand";
 import Link from "next/link";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 
 const publicLinks = [
@@ -12,7 +13,6 @@ const authedLinks = [
   { href: "/watchlist", label: "Watchlist" },
   { href: "/watched", label: "Watched" },
   { href: "/friends", label: "Friends" },
-  { href: "/profile", label: "Profile" },
   { href: "/import", label: "Import" },
 ];
 
@@ -21,6 +21,22 @@ export async function SiteHeader() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  // Fetch profile for avatar + display name
+  let avatarUrl: string | null = null;
+  let displayName: string | null = null;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("display_name, avatar_url")
+      .eq("id", user.id)
+      .maybeSingle();
+    avatarUrl = (profile?.avatar_url as string | null) ?? null;
+    displayName =
+      (profile?.display_name as string | null)?.trim() ||
+      user.email?.split("@")[0] ||
+      "Account";
+  }
 
   return (
     <header className="border-b border-white/10 bg-black/40 backdrop-blur-md">
@@ -32,6 +48,7 @@ export async function SiteHeader() {
           <span className="text-amber-200/90">{APP_NAME}</span>
           <span className="text-zinc-400"> — pick fast</span>
         </Link>
+
         <nav className="flex flex-wrap items-center gap-1 sm:flex-1 sm:justify-center">
           {publicLinks.map((l) => (
             <Link
@@ -54,12 +71,36 @@ export async function SiteHeader() {
               ))
             : null}
         </nav>
+
         <div className="flex flex-wrap items-center justify-end gap-2">
           {user ? (
             <>
-              <span className="hidden max-w-[160px] truncate text-xs text-zinc-500 md:inline">
-                {user.email}
-              </span>
+              {/* Profile avatar + name — clicking goes to /profile */}
+              <Link
+                href="/profile"
+                className="flex items-center gap-2 rounded-full py-1 pl-1 pr-3 transition hover:bg-white/5"
+              >
+                <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-full bg-zinc-700 ring-1 ring-white/15">
+                  {avatarUrl ? (
+                    <Image
+                      src={avatarUrl}
+                      alt={displayName ?? ""}
+                      fill
+                      className="object-cover"
+                      sizes="28px"
+                      unoptimized
+                    />
+                  ) : (
+                    <span className="flex h-full w-full items-center justify-center text-xs font-bold text-amber-200 select-none">
+                      {(displayName ?? "?").slice(0, 1).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+                <span className="hidden max-w-[120px] truncate text-sm font-medium text-zinc-200 md:block">
+                  {displayName}
+                </span>
+              </Link>
+
               <form action={signOut}>
                 <button
                   type="submit"
