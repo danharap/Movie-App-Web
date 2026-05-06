@@ -246,7 +246,7 @@ export default async function ProfilePage() {
       <div className="relative z-10 mx-auto w-full max-w-4xl">
       {/* ── Banner: edge-to-edge on mobile (Pinterest-style); card layout sm+ ── */}
       {bannerUrl ? (
-        <div className="relative mb-5 aspect-[21/9] min-h-[min(42vw,11.5rem)] w-full overflow-hidden bg-zinc-900 sm:mx-6 sm:mb-8 sm:mt-12 sm:aspect-auto sm:h-44 sm:min-h-0 sm:rounded-2xl sm:border sm:border-white/[0.08] sm:shadow-lg sm:shadow-black/40">
+        <div className="relative mb-5 aspect-[21/9] min-h-[min(42vw,11.5rem)] w-full overflow-hidden bg-zinc-900 sm:mx-6 sm:mb-8 sm:mt-12 sm:min-h-0 sm:rounded-2xl sm:border sm:border-white/[0.08] sm:shadow-lg sm:shadow-black/40">
           <Image
             src={bannerUrl}
             alt=""
