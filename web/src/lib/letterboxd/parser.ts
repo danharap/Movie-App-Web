@@ -125,10 +125,15 @@ function toYear(s: string | undefined): number | null {
   return Number.isFinite(n) && n > 1800 ? n : null;
 }
 
+/**
+ * Letterboxd ratings are half-star 0.5–5.0.
+ * The app uses a 0–10 scale, so we double them on import.
+ */
 function toRating(s: string | undefined): number | null {
   if (!s || s.trim() === "" || s.trim() === "0") return null;
   const n = parseFloat(s);
-  return Number.isFinite(n) && n >= 0.5 && n <= 5 ? n : null;
+  if (!Number.isFinite(n) || n < 0.5 || n > 5) return null;
+  return Math.round(n * 2 * 10) / 10; // e.g. 4.5 → 9.0, 3.5 → 7.0
 }
 
 function toIsoDate(s: string | undefined): string | null {
@@ -137,8 +142,8 @@ function toIsoDate(s: string | undefined): string | null {
   return s.trim() || null;
 }
 
-function makeKey(title: string, year: string | number | null): string {
-  return `${title.toLowerCase().trim()}::${year ?? ""}`;
+function makeKey(title: string | undefined | null, year: string | number | null | undefined): string {
+  return `${(title ?? "").toLowerCase().trim()}::${year ?? ""}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -169,14 +174,19 @@ function detectCsvType(headers: string[]): CsvFileType {
 
 function detectCsvTypeByPath(path: string, headers: string[]): CsvFileType {
   const lower = path.toLowerCase();
+  // Check most-specific paths FIRST to avoid false matches.
+  // e.g. likes/reviews.csv must NOT be matched by the "review" check.
+  if (lower.includes("likes/films") || lower.includes("likes\\films"))
+    return "likes_films";
+  // likes/reviews.csv and likes/lists.csv — not importable, treat as unknown
+  if (lower.includes("likes/") || lower.includes("likes\\")) return "unknown";
   if (lower.includes("diary")) return "diary";
   if (lower.includes("review")) return "reviews";
   if (lower.includes("rating")) return "ratings";
   if (lower.includes("watchlist")) return "watchlist";
-  if (lower.includes("likes/films") || lower.includes("likes\\films"))
-    return "likes_films";
   if (lower.includes("watched")) return "watched";
   if (lower.includes("profile")) return "profile";
+  if (lower.includes("comment")) return "unknown";
   // fallback to header detection
   return detectCsvType(headers);
 }
@@ -195,6 +205,7 @@ function buildWatchedMap(
 
   // Primary: diary rows (richest data)
   for (const row of diary) {
+    if (!row.Name) continue; // skip malformed rows
     const key = makeKey(row.Name, row.Year);
     const existing = map.get(key);
     const entry: LetterboxdWatchedEntry = {
@@ -216,6 +227,7 @@ function buildWatchedMap(
 
   // Fallback: watched.csv for any not in diary
   for (const row of watched) {
+    if (!row.Name) continue;
     const key = makeKey(row.Name, row.Year);
     if (!map.has(key)) {
       map.set(key, {
@@ -234,6 +246,7 @@ function buildWatchedMap(
 
   // Fill ratings
   for (const row of ratings) {
+    if (!row.Name) continue;
     const key = makeKey(row.Name, row.Year);
     const existing = map.get(key);
     const rating = toRating(row.Rating);
@@ -256,6 +269,7 @@ function buildWatchedMap(
 
   // Fill reviews (notes)
   for (const row of reviews) {
+    if (!row.Name) continue;
     const key = makeKey(row.Name, row.Year);
     const existing = map.get(key);
     const review = row.Review?.trim() || null;

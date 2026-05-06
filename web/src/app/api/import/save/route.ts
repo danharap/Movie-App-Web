@@ -16,11 +16,18 @@ export interface ConfirmedWatchlistItem {
 export interface SaveRequestBody {
   watched: ConfirmedWatchedItem[];
   watchlist: ConfirmedWatchlistItem[];
+  /**
+   * "overwrite": upsert — update rating/notes/date for existing entries.
+   * "skip": insert only new movies, leave existing ones untouched.
+   * "check": dry run — just return how many duplicates exist, don't write anything.
+   */
+  mode: "overwrite" | "skip" | "check";
 }
 
 export interface SaveResponseBody {
   watchedImported: number;
   watchedSkipped: number;
+  watchedDuplicates: number;
   watchlistImported: number;
   watchlistSkipped: number;
   errors: string[];
@@ -30,7 +37,6 @@ async function ensureMovieRow(
   supabase: Awaited<ReturnType<typeof createClient>>,
   tmdbId: number,
 ): Promise<number | null> {
-  // Check cache first
   const { data: existing } = await supabase
     .from("movies")
     .select("id")
@@ -38,7 +44,6 @@ async function ensureMovieRow(
     .maybeSingle();
   if (existing?.id) return Number(existing.id);
 
-  // Fetch from TMDB and cache
   try {
     const d = await getMovieDetails(tmdbId);
     const year =
@@ -46,22 +51,23 @@ async function ensureMovieRow(
         ? Number(d.release_date.slice(0, 4))
         : null;
 
-    const row = {
-      tmdb_id: tmdbId,
-      title: d.title,
-      release_year: Number.isFinite(year) ? year : null,
-      poster_path: d.poster_path,
-      backdrop_path: d.backdrop_path,
-      overview: d.overview,
-      runtime: d.runtime,
-      vote_average: d.vote_average,
-      vote_count: d.vote_count,
-      genres: d.genres,
-    };
-
     const { data, error } = await supabase
       .from("movies")
-      .upsert(row, { onConflict: "tmdb_id" })
+      .upsert(
+        {
+          tmdb_id: tmdbId,
+          title: d.title,
+          release_year: Number.isFinite(year) ? year : null,
+          poster_path: d.poster_path,
+          backdrop_path: d.backdrop_path,
+          overview: d.overview,
+          runtime: d.runtime,
+          vote_average: d.vote_average,
+          vote_count: d.vote_count,
+          genres: d.genres,
+        },
+        { onConflict: "tmdb_id" },
+      )
       .select("id")
       .single();
 
@@ -88,25 +94,70 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
+  const mode = body.mode ?? "overwrite";
+
+  // ── Check mode: count duplicates without writing ───────────────────────────
+  if (mode === "check") {
+    const tmdbIds = (body.watched ?? []).map((w) => w.tmdbId);
+    if (tmdbIds.length === 0) {
+      return NextResponse.json({
+        watchedImported: 0,
+        watchedSkipped: 0,
+        watchedDuplicates: 0,
+        watchlistImported: 0,
+        watchlistSkipped: 0,
+        errors: [],
+      } satisfies SaveResponseBody);
+    }
+
+    // Find which tmdbIds already have a movies row the user has watched
+    const { data: existingMovies } = await supabase
+      .from("movies")
+      .select("id, tmdb_id")
+      .in("tmdb_id", tmdbIds);
+
+    const existingMovieIds = (existingMovies ?? []).map((m) => Number(m.id));
+
+    let duplicates = 0;
+    if (existingMovieIds.length > 0) {
+      const { count } = await supabase
+        .from("watched_movies")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .in("movie_id", existingMovieIds);
+      duplicates = count ?? 0;
+    }
+
+    return NextResponse.json({
+      watchedImported: 0,
+      watchedSkipped: 0,
+      watchedDuplicates: duplicates,
+      watchlistImported: 0,
+      watchlistSkipped: 0,
+      errors: [],
+    } satisfies SaveResponseBody);
+  }
+
+  // ── Actual save (overwrite or skip) ────────────────────────────────────────
   const stats: SaveResponseBody = {
     watchedImported: 0,
     watchedSkipped: 0,
+    watchedDuplicates: 0,
     watchlistImported: 0,
     watchlistSkipped: 0,
     errors: [],
   };
 
-  // Import watched movies
   for (const item of body.watched ?? []) {
     const movieId = await ensureMovieRow(supabase, item.tmdbId);
     if (!movieId) {
       stats.watchedSkipped++;
-      stats.errors.push(`Could not cache TMDB movie ${item.tmdbId}`);
       continue;
     }
 
-    const { error } = await supabase.from("watched_movies").upsert(
-      {
+    if (mode === "skip") {
+      // Insert only — ignore if already exists
+      const { error } = await supabase.from("watched_movies").insert({
         user_id: user.id,
         movie_id: movieId,
         watched_at: item.watchedDate
@@ -114,19 +165,43 @@ export async function POST(request: NextRequest) {
           : new Date().toISOString(),
         user_rating: item.rating ?? null,
         notes: item.review ?? null,
-      },
-      { onConflict: "user_id,movie_id" },
-    );
+      });
 
-    if (error) {
-      stats.watchedSkipped++;
-      stats.errors.push(`watched_movies upsert error: ${error.message}`);
+      if (error) {
+        if (error.code === "23505") {
+          // Unique constraint — already exists, intentionally skipped
+          stats.watchedDuplicates++;
+        } else {
+          stats.watchedSkipped++;
+          stats.errors.push(`Insert error: ${error.message}`);
+        }
+      } else {
+        stats.watchedImported++;
+      }
     } else {
-      stats.watchedImported++;
+      // Overwrite (upsert)
+      const { error } = await supabase.from("watched_movies").upsert(
+        {
+          user_id: user.id,
+          movie_id: movieId,
+          watched_at: item.watchedDate
+            ? new Date(item.watchedDate).toISOString()
+            : new Date().toISOString(),
+          user_rating: item.rating ?? null,
+          notes: item.review ?? null,
+        },
+        { onConflict: "user_id,movie_id" },
+      );
+
+      if (error) {
+        stats.watchedSkipped++;
+        stats.errors.push(`Upsert error: ${error.message}`);
+      } else {
+        stats.watchedImported++;
+      }
     }
   }
 
-  // Import watchlist
   for (const item of body.watchlist ?? []) {
     const movieId = await ensureMovieRow(supabase, item.tmdbId);
     if (!movieId) {
