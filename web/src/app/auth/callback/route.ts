@@ -13,6 +13,7 @@ export async function GET(request: Request) {
   const origin = resolveAppOriginFromHeaders(request.headers);
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
+  const postVerifyLogin = searchParams.get("post_verify") === "login";
   const rawNext = searchParams.get("next") ?? "/";
   const next =
     rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/";
@@ -32,7 +33,10 @@ export async function GET(request: Request) {
   }
 
   const cookieStore = await cookies();
-  const redirectUrl = `${origin}${next}`;
+  /** After signup email confirm we verify the token then sign out so the user logs in deliberately. */
+  const redirectUrl = postVerifyLogin
+    ? `${origin}/login?message=email_verified&redirect=/onboarding`
+    : `${origin}${next}`;
   const response = NextResponse.redirect(redirectUrl);
 
   const supabase = createServerClient(
@@ -70,6 +74,10 @@ export async function GET(request: Request) {
         ? " Try opening the confirmation link in the same browser where you created your account."
         : "";
     return loginWithMessage(origin, `${error.message}${verifierHint}`);
+  }
+
+  if (postVerifyLogin) {
+    await supabase.auth.signOut();
   }
 
   return response;

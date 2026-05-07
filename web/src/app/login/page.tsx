@@ -1,7 +1,13 @@
 import { signInWithEmail } from "@/app/actions/auth";
 import Link from "next/link";
 
-type Props = { searchParams: Promise<{ error?: string; redirect?: string }> };
+type Props = {
+  searchParams: Promise<{
+    error?: string;
+    redirect?: string;
+    message?: string;
+  }>;
+};
 
 export default async function LoginPage({ searchParams }: Props) {
   const q = await searchParams;
@@ -17,6 +23,11 @@ export default async function LoginPage({ searchParams }: Props) {
           Create an account
         </Link>
       </p>
+      {q.message === "email_verified" ? (
+        <p className="mt-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
+          Your email is verified. Sign in with the password you chose to continue.
+        </p>
+      ) : null}
       {err ? (
         <p className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
           {err}

@@ -27,8 +27,8 @@ export async function signUpWithEmail(formData: FormData) {
     email,
     password,
     options: {
-      // After email confirmation, send new users through the onboarding flow
-      emailRedirectTo: `${origin}/auth/callback?next=/onboarding`,
+      // Confirm in app, then send to login (must sign in) — onboarding after login
+      emailRedirectTo: `${origin}/auth/callback?post_verify=login`,
       data: { display_name: displayName || email.split("@")[0] },
     },
   });
