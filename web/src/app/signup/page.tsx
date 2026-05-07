@@ -1,7 +1,15 @@
 import { signUpWithEmail } from "@/app/actions/auth";
 import Link from "next/link";
 
-type Props = { searchParams: Promise<{ error?: string; message?: string }> };
+type Props = {
+  searchParams: Promise<{
+    error?: string;
+    message?: string;
+    displayName?: string;
+    username?: string;
+    email?: string;
+  }>;
+};
 
 /** Friendlier copy for Supabase auth errors users hit during QA / multi-account signup */
 function formatSignupError(raw: string): string {
@@ -23,6 +31,9 @@ function formatSignupError(raw: string): string {
 export default async function SignupPage({ searchParams }: Props) {
   const q = await searchParams;
   const err = q.error ? formatSignupError(decodeURIComponent(q.error)) : null;
+  const prefilledDisplayName = q.displayName ? decodeURIComponent(q.displayName) : "";
+  const prefilledUsername = q.username ? decodeURIComponent(q.username) : "";
+  const prefilledEmail = q.email ? decodeURIComponent(q.email) : "";
 
   return (
     <div className="mx-auto max-w-sm px-4 py-20 sm:px-6">
@@ -52,8 +63,41 @@ export default async function SignupPage({ searchParams }: Props) {
             id="displayName"
             name="displayName"
             type="text"
+            required
+            autoComplete="name"
+            placeholder="Your name (e.g. Jane Doe)"
+            defaultValue={prefilledDisplayName}
             className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-indigo-400/25"
           />
+          <p className="text-xs text-zinc-600">Shown on your profile.</p>
+        </div>
+        <div className="space-y-2">
+          <label htmlFor="username" className="text-sm text-zinc-400">
+            Username
+          </label>
+          <div className="flex items-stretch">
+            <span className="flex items-center rounded-l-xl border border-r-0 border-white/10 bg-black/40 px-3 text-xs text-zinc-500">
+              @
+            </span>
+            <input
+              id="username"
+              name="username"
+              type="text"
+              required
+              minLength={3}
+              maxLength={24}
+              pattern="[a-zA-Z0-9_]{3,24}"
+              autoCapitalize="none"
+              autoCorrect="off"
+              autoComplete="username"
+              placeholder="janedoe"
+              defaultValue={prefilledUsername}
+              className="w-full rounded-r-xl border border-white/10 bg-black/40 px-3 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-indigo-400/25"
+            />
+          </div>
+          <p className="text-xs text-zinc-600">
+            3–24 characters · letters, numbers, underscores. Friends use this to find you.
+          </p>
         </div>
         <div className="space-y-2">
           <label htmlFor="email" className="text-sm text-zinc-400">
@@ -65,6 +109,7 @@ export default async function SignupPage({ searchParams }: Props) {
             type="email"
             required
             autoComplete="email"
+            defaultValue={prefilledEmail}
             className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-indigo-400/25"
           />
         </div>
