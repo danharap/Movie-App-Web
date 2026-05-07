@@ -11,9 +11,7 @@ A production-style app for indecisive viewers: **vibe** chips or **genre-strict*
 ## 1. Database (Supabase)
 
 1. Create a project in the Supabase dashboard.
-2. Run the SQL migration in the SQL editor (or via Supabase CLI):
-
-   - File: [supabase/migrations/20250417000000_initial_schema.sql](supabase/migrations/20250417000000_initial_schema.sql)
+2. Run the SQL migrations in the SQL editor or via Supabase CLI (in order under [supabase/migrations/](supabase/migrations/), including [20260508120000_profiles_onboarding_completed.sql](supabase/migrations/20260508120000_profiles_onboarding_completed.sql) for first-login onboarding → profile routing).
 
 3. Authentication → URL configuration: add site URLs:
 

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { completeOnboarding } from "@/app/onboarding/actions";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Download, ExternalLink } from "lucide-react";
+import { useState } from "react";
 
 type Step = "welcome" | "referral" | "letterboxd" | "letterboxd-guide" | "allset";
 
@@ -53,8 +54,15 @@ export function OnboardingWizard({ displayName }: { displayName: string }) {
   const [step, setStep] = useState<Step>("welcome");
   const [referral, setReferral] = useState<string | null>(null);
 
-  const goToApp = () => router.push("/recommend");
-  const goToImport = () => router.push("/import");
+  const finishToProfile = async () => {
+    await completeOnboarding();
+    router.push("/profile");
+  };
+
+  const finishToImport = async () => {
+    await completeOnboarding();
+    router.push("/import");
+  };
 
   // ── Welcome ────────────────────────────────────────────────────────────────
   if (step === "welcome") {
@@ -212,17 +220,19 @@ export function OnboardingWizard({ displayName }: { displayName: string }) {
 
         <div className="mt-5 flex flex-col gap-3">
           <button
-            onClick={goToImport}
+            type="button"
+            onClick={() => void finishToImport()}
             className="flex items-center justify-center gap-2 rounded-xl bg-indigo-500 py-3 text-sm font-semibold text-white transition hover:bg-indigo-300"
           >
             <Download className="h-4 w-4" />
             I have my file — import now
           </button>
           <button
-            onClick={goToApp}
+            type="button"
+            onClick={() => void finishToProfile()}
             className="rounded-xl border border-white/10 py-3 text-sm text-zinc-400 transition hover:border-white/20 hover:text-zinc-200"
           >
-            I&apos;ll import later — take me to the app
+            I&apos;ll import later — take me to my profile
           </button>
         </div>
       </WizardCard>
@@ -241,10 +251,11 @@ export function OnboardingWizard({ displayName }: { displayName: string }) {
         </p>
       </div>
       <button
-        onClick={goToApp}
+        type="button"
+        onClick={() => void finishToProfile()}
         className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-500 py-3 text-sm font-semibold text-white transition hover:bg-indigo-300"
       >
-        Find a film <ChevronRight className="h-4 w-4" />
+        Go to my profile <ChevronRight className="h-4 w-4" />
       </button>
     </WizardCard>
   );

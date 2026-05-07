@@ -16,9 +16,11 @@ export default async function OnboardingPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name")
+    .select("display_name, onboarding_completed_at")
     .eq("id", user.id)
     .maybeSingle();
+
+  if (profile?.onboarding_completed_at) redirect("/profile");
 
   const displayName =
     (profile?.display_name as string | null)?.trim() ||

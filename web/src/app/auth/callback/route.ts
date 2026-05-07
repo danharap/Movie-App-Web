@@ -35,7 +35,7 @@ export async function GET(request: Request) {
   const cookieStore = await cookies();
   /** After signup email confirm we verify the token then sign out so the user logs in deliberately. */
   const redirectUrl = postVerifyLogin
-    ? `${origin}/login?message=email_verified&redirect=/onboarding`
+    ? `${origin}/login?message=email_verified`
     : `${origin}${next}`;
   const response = NextResponse.redirect(redirectUrl);
 

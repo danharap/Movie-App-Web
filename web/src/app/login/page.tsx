@@ -12,7 +12,8 @@ type Props = {
 export default async function LoginPage({ searchParams }: Props) {
   const q = await searchParams;
   const err = q.error ? decodeURIComponent(q.error) : null;
-  const redirect = q.redirect && q.redirect.startsWith("/") ? q.redirect : "/";
+  const redirect =
+    q.redirect && q.redirect.startsWith("/") ? q.redirect : "/auth/post-login";
 
   return (
     <div className="mx-auto max-w-sm px-4 py-20 sm:px-6">
