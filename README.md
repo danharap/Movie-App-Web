@@ -18,7 +18,8 @@ A production-style app for indecisive viewers: **vibe** chips or **genre-strict*
 3. Authentication → URL configuration: add site URLs:
 
    - `http://localhost:3000/**` (local)
-   - Your production URL (e.g. `https://your-app.vercel.app/**`)
+   - `https://nudgefilm.com/**` (production)
+   - Each **Vercel preview** URL you use for auth (e.g. `https://your-deployment.vercel.app/auth/callback`) under **Redirect URLs**, unless you use a Supabase-supported wildcard pattern for previews
 
 4. Copy **Project URL** and the **anon / public** key from **Project Settings → API** for env vars below.  
    If the dashboard shows a **publishable** key (`sb_publishable_…`) and sign-in fails, use the **legacy anon** JWT (`eyJ…`) in `NEXT_PUBLIC_SUPABASE_ANON_KEY` instead — the JS client must match what your project expects.
@@ -28,7 +29,7 @@ A production-style app for indecisive viewers: **vibe** chips or **genre-strict*
 ```bash
 cd web
 cp .env.example .env.local
-# Fill in NEXT_PUBLIC_SUPABASE_*, TMDB_API_KEY, NEXT_PUBLIC_SITE_URL
+# Fill in NEXT_PUBLIC_SUPABASE_*, TMDB_API_KEY, NEXT_PUBLIC_SITE_URL (local: http://localhost:3000)
 npm install
 npm run dev
 ```
@@ -49,7 +50,7 @@ Open [http://localhost:3000](http://localhost:3000).
 |------|----------------|------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Production, Preview, Development | Your Supabase project URL, e.g. `https://xxxx.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Production, Preview, Development | Public anon / publishable key from Supabase **API** settings |
-| `NEXT_PUBLIC_SITE_URL` | Production (required), Preview (optional) | **No trailing slash.** Production: `https://your-domain.vercel.app` (or your custom domain). For preview branches you can set the Vercel preview URL pattern or your default preview URL. |
+| `NEXT_PUBLIC_SITE_URL` | Production (recommended), Preview (optional), Development | **No trailing slash.** Production: `https://nudgefilm.com`. Previews work without this: the app derives the origin from request headers for auth; omitting it on Preview falls back to `VERCEL_URL` for sitemap/metadata. You may use `NEXT_PUBLIC_APP_URL` as an alias when `NEXT_PUBLIC_SITE_URL` is unset. |
 | `TMDB_READ_ACCESS_TOKEN` *or* `TMDB_API_KEY` | Production, Preview, Development | **Sensitive** — **do not** use `NEXT_PUBLIC_`. The app prefers **`TMDB_READ_ACCESS_TOKEN`** (Bearer, from TMDb **API Read Access Token**). If unset, it uses **`TMDB_API_KEY`** (v3 key in the query string). Set at least one. |
 
 You do **not** need `SUPABASE_SERVICE_ROLE_KEY` for the current app: all writes go through the logged-in user and RLS with the **anon** key.

@@ -1,5 +1,6 @@
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { APP_NAME } from "@/config/brand";
+import { getConfiguredOrigin, getMetadataBase } from "@/lib/site-url";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
@@ -16,10 +17,35 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: getMetadataBase(),
   title: `${APP_NAME} — quick picks & your watch log`,
   description:
     `${APP_NAME}: strict genre-aware suggestions from TMDb, plus watchlist and watched history in Supabase.`,
   applicationName: APP_NAME,
+  openGraph: {
+    type: "website",
+    locale: "en",
+    url: getConfiguredOrigin(),
+    siteName: APP_NAME,
+    title: `${APP_NAME} — quick picks & your watch log`,
+    description:
+      `${APP_NAME}: strict genre-aware suggestions from TMDb, plus watchlist and watched history in Supabase.`,
+    images: [
+      {
+        url: "/screenshots/home-wide.png",
+        width: 1280,
+        height: 720,
+        alt: `${APP_NAME} home`,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${APP_NAME} — quick picks & your watch log`,
+    description:
+      `${APP_NAME}: strict genre-aware suggestions from TMDb, plus watchlist and watched history in Supabase.`,
+    images: ["/screenshots/home-wide.png"],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

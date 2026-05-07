@@ -1,4 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.nudgefilm.com" }],
+      "destination": "https://nudgefilm.com/:path*",
+      "permanent": true
+    }
+  ]
 }

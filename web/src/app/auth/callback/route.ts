@@ -1,16 +1,7 @@
+import { resolveAppOriginFromHeaders } from "@/lib/site-url";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-
-function getRequestOrigin(request: Request): string {
-  const url = new URL(request.url);
-  const forwardedHost = request.headers.get("x-forwarded-host");
-  const forwardedProto = request.headers.get("x-forwarded-proto");
-  if (forwardedHost && forwardedProto) {
-    return `${forwardedProto}://${forwardedHost}`;
-  }
-  return url.origin;
-}
 
 function loginWithMessage(origin: string, message: string) {
   return NextResponse.redirect(
@@ -19,7 +10,7 @@ function loginWithMessage(origin: string, message: string) {
 }
 
 export async function GET(request: Request) {
-  const origin = getRequestOrigin(request);
+  const origin = resolveAppOriginFromHeaders(request.headers);
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
   const rawNext = searchParams.get("next") ?? "/";

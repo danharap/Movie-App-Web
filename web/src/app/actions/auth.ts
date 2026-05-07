@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getAppOriginAsync } from "@/lib/site-url";
 import { redirect } from "next/navigation";
 
 export async function signInWithEmail(formData: FormData) {
@@ -21,8 +22,7 @@ export async function signUpWithEmail(formData: FormData) {
   const password = String(formData.get("password") ?? "");
   const displayName = String(formData.get("displayName") ?? "").trim();
   const supabase = await createClient();
-  const origin =
-    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const origin = await getAppOriginAsync();
   const { error } = await supabase.auth.signUp({
     email,
     password,
