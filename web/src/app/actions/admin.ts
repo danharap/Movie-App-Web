@@ -101,23 +101,31 @@ export async function deleteUserAccount(targetId: string) {
 
   const admin = createAdminClient();
 
-  // Soft delete: anonymise profile data
-  const { error } = await admin
+  const { data: target, error: fetchErr } = await admin
     .from("profiles")
-    .update({
-      display_name: "[Deleted]",
-      username: null,
-      bio: null,
-      avatar_url: null,
-      email: null,
-      status: "banned",
-      admin_notes: `Deleted by admin ${actorId} at ${new Date().toISOString()}`,
-    })
-    .eq("id", targetId);
+    .select("role")
+    .eq("id", targetId)
+    .maybeSingle();
 
-  if (error) throw new Error("Failed to delete account: " + error.message);
+  if (fetchErr) throw new Error("Failed to look up user: " + fetchErr.message);
+  if (!target) throw new Error("User not found.");
+
+  const oldRole = String(target.role);
+
+  // Remove the auth user; public.profiles cascades on delete (FK to auth.users).
+  const { error: deleteErr } = await admin.auth.admin.deleteUser(targetId);
+  if (deleteErr) throw new Error("Failed to delete account: " + deleteErr.message);
+
+  await admin.from("role_audit_logs").insert({
+    actor_id: actorId,
+    target_id: null,
+    old_role: oldRole,
+    new_role: "account_deleted",
+    notes: `Permanently deleted auth user ${targetId} at ${new Date().toISOString()}`,
+  });
 
   revalidatePath("/admin/users");
+  revalidatePath("/admin/logs");
 }
 
 // ---------------------------------------------------------------------------

@@ -78,14 +78,13 @@ function UserRow({
 
   async function handleDelete() {
     if (!confirm(`Permanently delete ${user.display_name ?? user.email}? This cannot be undone.`)) return;
-    startTransition(async () => {
-      try {
-        await deleteUserAccount(user.id);
-        dispatch(showToast({ message: "Account deleted.", type: "success" }));
-      } catch (e) {
-        dispatch(showToast({ message: (e as Error).message, type: "error" }));
-      }
-    });
+    try {
+      await deleteUserAccount(user.id);
+      dispatch(setSelectedUser(null));
+      dispatch(showToast({ message: "Account deleted.", type: "success" }));
+    } catch (e) {
+      dispatch(showToast({ message: (e as Error).message, type: "error" }));
+    }
   }
 
   async function handleSaveNotes() {
