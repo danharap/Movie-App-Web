@@ -2,11 +2,11 @@
 
 import { APP_NAME } from "@/config/brand";
 import { posterUrl } from "@/lib/tmdb/constants";
-import { motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type HeroMovie = {
   id: number;
@@ -15,6 +15,7 @@ type HeroMovie = {
   backdrop_path: string | null;
   poster_path: string | null;
   release_date: string;
+  genre_ids?: number[];
 };
 
 type Review = {
@@ -72,22 +73,57 @@ function vibeMatch(title: string) {
   return "Hidden Gem";
 }
 
+function scoreForVibe(movie: HeroMovie, vibe: (typeof vibeOptions)[number]) {
+  const genres = new Set(movie.genre_ids ?? []);
+  switch (vibe) {
+    case "Cozy":
+      return Number(genres.has(10749) || genres.has(35) || genres.has(16));
+    case "Weird":
+      return Number(genres.has(14) || genres.has(878) || genres.has(9648));
+    case "Emotional":
+      return Number(genres.has(18) || genres.has(10749));
+    case "Hidden Gem":
+      return Number(genres.has(99) || genres.has(80) || genres.has(36));
+    case "Late Night":
+      return Number(genres.has(53) || genres.has(27) || genres.has(80));
+    case "Funny":
+      return Number(genres.has(35));
+    default:
+      return 0;
+  }
+}
+
 export function HomeLandingClient({ user, reviews, heroMovies }: Props) {
   const reduceMotion = useReducedMotion();
   const preview = reviews.slice(0, 3);
   const avgRating = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : null;
   const hasReviewed = user ? reviews.some((r) => r.user_id === user.id) : false;
   const [activeVibe, setActiveVibe] = useState<(typeof vibeOptions)[number]>("Cozy");
+  const [activeHeroIdx, setActiveHeroIdx] = useState(0);
 
   const heroImages = useMemo(
     () => heroMovies.filter((m) => m.backdrop_path).slice(0, 5),
     [heroMovies],
   );
 
+  useEffect(() => {
+    if (reduceMotion || heroImages.length <= 1) return;
+    const id = window.setInterval(() => {
+      setActiveHeroIdx((prev) => (prev + 1) % heroImages.length);
+    }, 9500);
+    return () => window.clearInterval(id);
+  }, [heroImages.length, reduceMotion]);
+
   const showcased = useMemo(() => {
     const withPosters = heroMovies.filter((m) => m.poster_path).slice(0, 12);
-    const byVibe = withPosters.filter((m) => vibeMatch(m.title) === activeVibe);
-    return (byVibe.length >= 4 ? byVibe : withPosters).slice(0, 6);
+    const sortedByVibe = [...withPosters].sort((a, b) => {
+      const byGenre = scoreForVibe(b, activeVibe) - scoreForVibe(a, activeVibe);
+      if (byGenre !== 0) return byGenre;
+      const byTitleHint = Number(vibeMatch(b.title) === activeVibe) - Number(vibeMatch(a.title) === activeVibe);
+      if (byTitleHint !== 0) return byTitleHint;
+      return a.id - b.id;
+    });
+    return sortedByVibe.slice(0, 6);
   }, [heroMovies, activeVibe]);
 
   return (
@@ -95,32 +131,27 @@ export function HomeLandingClient({ user, reviews, heroMovies }: Props) {
       <section className="relative min-h-[92vh] overflow-hidden">
         <div aria-hidden className="absolute inset-0 -z-10">
           <div className="absolute inset-0 bg-[#06080f]" />
-          {heroImages.map((movie, idx) => {
-            const image = posterUrl(movie.backdrop_path, "original");
-            if (!image) return null;
-            return (
+          <AnimatePresence mode="wait">
+            {heroImages[activeHeroIdx] ? (
               <motion.div
-                key={movie.id}
+                key={heroImages[activeHeroIdx].id}
                 className="absolute inset-0"
-                initial={{ opacity: idx === 0 ? 1 : 0, scale: 1.02 }}
-                animate={
-                  reduceMotion
-                    ? { opacity: idx === 0 ? 1 : 0 }
-                    : {
-                        opacity: [0, 1, 1, 0],
-                        scale: [1.04, 1.08, 1.1, 1.12],
-                      }
-                }
-                transition={
-                  reduceMotion
-                    ? { duration: 0 }
-                    : { duration: heroImages.length * 6, repeat: Number.POSITIVE_INFINITY, delay: idx * 6, ease: "easeInOut" }
-                }
+                initial={{ opacity: 0, scale: 1.03 }}
+                animate={reduceMotion ? { opacity: 1, scale: 1.03 } : { opacity: 1, scale: 1.08 }}
+                exit={{ opacity: 0 }}
+                transition={{ opacity: { duration: 1.1 }, scale: { duration: 9.4, ease: "linear" } }}
               >
-                <Image src={image} alt="" fill priority={idx === 0} className="object-cover" sizes="100vw" />
+                <Image
+                  src={posterUrl(heroImages[activeHeroIdx].backdrop_path, "original") ?? ""}
+                  alt=""
+                  fill
+                  priority={activeHeroIdx === 0}
+                  className="object-cover"
+                  sizes="100vw"
+                />
               </motion.div>
-            );
-          })}
+            ) : null}
+          </AnimatePresence>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(87,92,255,.24),transparent_45%)]" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/55 to-[#05060c]" />
           <motion.div
@@ -146,6 +177,11 @@ export function HomeLandingClient({ user, reviews, heroMovies }: Props) {
           <motion.p variants={item} transition={{ duration: 0.55 }} className="mt-5 max-w-xl text-base leading-relaxed text-zinc-200/80 sm:text-lg">
             Curated films for your exact mood. No algorithmic noise. No endless browsing.
           </motion.p>
+          <motion.ul variants={item} transition={{ duration: 0.55 }} className="mt-5 grid max-w-2xl gap-2 text-sm text-zinc-200/80 sm:grid-cols-3">
+            <li className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 backdrop-blur-sm">Track films and shows you watched</li>
+            <li className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 backdrop-blur-sm">Save what you want to watch next</li>
+            <li className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 backdrop-blur-sm">Share with friends and style your profile</li>
+          </motion.ul>
           <motion.div variants={item} transition={{ duration: 0.55 }} className="mt-9 flex flex-col gap-3 sm:flex-row">
             <MagneticButton href="/recommend" strong>
               Find a film tonight
