@@ -3,8 +3,8 @@
 import { deleteUserAccount, promoteUser, setAdminNotes, setUserStatus } from "@/app/actions/admin";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setSelectedUser, setUserFilter } from "@/store/slices/adminSlice";
-import { showToast } from "@/store/slices/uiSlice";
-import { useTransition, useState } from "react";
+import { clearToast, showToast } from "@/store/slices/uiSlice";
+import { useEffect, useTransition, useState } from "react";
 import type { Role } from "@/lib/admin/rbac";
 
 type User = {
@@ -207,20 +207,30 @@ function UserRow({
 // ---------------------------------------------------------------------------
 // Toast
 // ---------------------------------------------------------------------------
+const ADMIN_TOAST_AUTO_DISMISS_MS = 4500;
+
 function AdminToast() {
   const dispatch = useAppDispatch();
   const { toastMessage, toastType } = useAppSelector((s) => s.ui);
+
+  useEffect(() => {
+    if (!toastMessage) return;
+    const id = window.setTimeout(() => dispatch(clearToast()), ADMIN_TOAST_AUTO_DISMISS_MS);
+    return () => window.clearTimeout(id);
+  }, [toastMessage, dispatch]);
+
   if (!toastMessage) return null;
   return (
     <div
-      className={`fixed bottom-6 right-6 z-50 rounded-2xl px-4 py-3 text-sm font-medium shadow-xl ${
+      role="status"
+      className={`fixed bottom-6 right-6 z-50 cursor-pointer rounded-2xl px-4 py-3 text-sm font-medium shadow-xl ${
         toastType === "success"
           ? "bg-green-900 text-green-200"
           : toastType === "error"
             ? "bg-red-900 text-red-200"
             : "bg-zinc-800 text-zinc-200"
       }`}
-      onClick={() => dispatch({ type: "ui/clearToast" })}
+      onClick={() => dispatch(clearToast())}
     >
       {toastMessage}
     </div>
