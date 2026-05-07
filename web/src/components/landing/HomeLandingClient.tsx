@@ -47,7 +47,7 @@ const container = {
 
 const item = {
   hidden: { opacity: 0, y: 18, filter: "blur(8px)" },
-  show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } },
+  show: { opacity: 1, y: 0, filter: "blur(0px)" },
 };
 
 function Stars({ rating }: { rating: number }) {
@@ -137,16 +137,16 @@ export function HomeLandingClient({ user, reviews, heroMovies }: Props) {
           animate="show"
           className="mx-auto flex min-h-[92vh] max-w-6xl flex-col justify-center px-4 pb-20 pt-24 sm:px-6 lg:pt-28"
         >
-          <motion.p variants={item} className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-black/35 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-indigo-200/90 backdrop-blur-md">
+          <motion.p variants={item} transition={{ duration: 0.55 }} className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-black/35 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-indigo-200/90 backdrop-blur-md">
             {APP_NAME}
           </motion.p>
-          <motion.h1 variants={item} className="mt-7 max-w-3xl text-4xl font-bold leading-[1.04] tracking-tight text-white sm:text-6xl lg:text-[4.3rem]">
+          <motion.h1 variants={item} transition={{ duration: 0.55 }} className="mt-7 max-w-3xl text-4xl font-bold leading-[1.04] tracking-tight text-white sm:text-6xl lg:text-[4.3rem]">
             {heroHeadlines[0]}
           </motion.h1>
-          <motion.p variants={item} className="mt-5 max-w-xl text-base leading-relaxed text-zinc-200/80 sm:text-lg">
+          <motion.p variants={item} transition={{ duration: 0.55 }} className="mt-5 max-w-xl text-base leading-relaxed text-zinc-200/80 sm:text-lg">
             Curated films for your exact mood. No algorithmic noise. No endless browsing.
           </motion.p>
-          <motion.div variants={item} className="mt-9 flex flex-col gap-3 sm:flex-row">
+          <motion.div variants={item} transition={{ duration: 0.55 }} className="mt-9 flex flex-col gap-3 sm:flex-row">
             <MagneticButton href="/recommend" strong>
               Find a film tonight
             </MagneticButton>
