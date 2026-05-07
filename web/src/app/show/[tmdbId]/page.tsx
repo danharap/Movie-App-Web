@@ -30,6 +30,7 @@ export default async function ShowDetailPage({ params }: Props) {
 
   // Load show-level diary entry
   let existing: DiaryEntry | null = null;
+  let inWatchlist = false;
   // Load per-season ratings: keyed by the season's own TMDb ID
   const seasonRatings: Record<number, DiaryEntry> = {};
 
@@ -51,13 +52,26 @@ export default async function ShowDetailPage({ params }: Props) {
       (movieRows ?? []).map((r) => [Number(r.tmdb_id), Number(r.id)]),
     );
     const movieIds = Object.values(rowMap);
+    const showMovieId = rowMap[showStoredId];
 
     if (movieIds.length > 0) {
-      const { data: watchedRows } = await supabase
-        .from("watched_movies")
-        .select("movie_id, user_rating, notes")
-        .eq("user_id", user.id)
-        .in("movie_id", movieIds);
+      const [{ data: watchedRows }, { data: watchlistRow }] = await Promise.all([
+        supabase
+          .from("watched_movies")
+          .select("movie_id, user_rating, notes")
+          .eq("user_id", user.id)
+          .in("movie_id", movieIds),
+        showMovieId
+          ? supabase
+              .from("watchlist")
+              .select("id")
+              .eq("user_id", user.id)
+              .eq("movie_id", showMovieId)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+      ]);
+
+      inWatchlist = !!(watchlistRow as { id?: number } | null)?.id;
 
       for (const row of watchedRows ?? []) {
         const storedId = Object.entries(rowMap).find(([, id]) => id === Number(row.movie_id))?.[0];
@@ -243,7 +257,12 @@ export default async function ShowDetailPage({ params }: Props) {
         )}
 
         {/* Log / Rate */}
-        <ShowActions tmdbId={tmdbId} isLoggedIn={!!user} existing={existing} />
+        <ShowActions
+          tmdbId={tmdbId}
+          isLoggedIn={!!user}
+          existing={existing}
+          inWatchlist={inWatchlist}
+        />
 
         {!user && (
           <p className="mt-4 text-center text-xs text-zinc-600 md:text-left">

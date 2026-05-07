@@ -1,6 +1,6 @@
 "use client";
 
-import { addToWatchlist, markWatched } from "@/app/actions/library";
+import { addToWatchlist, markWatched, removeFromWatchlist } from "@/app/actions/library";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -15,18 +15,25 @@ type Props = {
   tmdbId: number;
   isLoggedIn: boolean;
   existing: ExistingEntry;
+  inWatchlist: boolean;
 };
 
 const RATING_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
 
-export function MovieActions({ tmdbId, isLoggedIn, existing }: Props) {
+export function MovieActions({ tmdbId, isLoggedIn, existing, inWatchlist }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [showRateForm, setShowRateForm] = useState(false);
   const [rating, setRating] = useState<number>(existing?.user_rating ?? 0);
   const [notes, setNotes] = useState(existing?.notes ?? "");
+  const [queued, setQueued] = useState(inWatchlist);
 
-  function run(action: () => Promise<void>, successMsg = "Saved.", onSuccess?: () => void) {
+  function run(
+    action: () => Promise<void>,
+    successMsg = "Saved.",
+    onSuccess?: () => void,
+    onError?: () => void,
+  ) {
     startTransition(async () => {
       try {
         await action();
@@ -34,6 +41,7 @@ export function MovieActions({ tmdbId, isLoggedIn, existing }: Props) {
         onSuccess?.();
         router.refresh();
       } catch (e) {
+        onError?.();
         toast.error(e instanceof Error ? e.message : "Something went wrong.");
       }
     });
@@ -80,10 +88,32 @@ export function MovieActions({ tmdbId, isLoggedIn, existing }: Props) {
         <button
           type="button"
           disabled={isPending}
-          onClick={() => run(() => addToWatchlist(tmdbId), "Added to watchlist.")}
-          className="rounded-full border border-white/10 px-5 py-2.5 text-sm text-zinc-300 transition hover:border-indigo-400/30 hover:text-white disabled:opacity-50"
+          onClick={() => {
+            if (queued) {
+              setQueued(false);
+              run(
+                () => removeFromWatchlist(tmdbId),
+                "Removed from watchlist.",
+                undefined,
+                () => setQueued(true),
+              );
+            } else {
+              setQueued(true);
+              run(
+                () => addToWatchlist(tmdbId),
+                "Added to watchlist.",
+                undefined,
+                () => setQueued(false),
+              );
+            }
+          }}
+          className={`rounded-full px-5 py-2.5 text-sm font-medium transition disabled:opacity-50 ${
+            queued
+              ? "border border-indigo-400/30 bg-indigo-400/10 text-indigo-200 hover:bg-indigo-400/20"
+              : "border border-white/10 text-zinc-300 hover:border-indigo-400/30 hover:text-white"
+          }`}
         >
-          Watchlist
+          {queued ? "✓ In watchlist · Remove" : "Watchlist"}
         </button>
 
         <Link

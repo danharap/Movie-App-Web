@@ -1,6 +1,13 @@
 "use client";
 
-import { addTVToWatchlist, addToWatchlist, markTVWatched, markWatched } from "@/app/actions/library";
+import {
+  addTVToWatchlist,
+  addToWatchlist,
+  markTVWatched,
+  markWatched,
+  removeFromWatchlist,
+  removeTVFromWatchlist,
+} from "@/app/actions/library";
 import { posterUrl } from "@/lib/tmdb/constants";
 import Image from "next/image";
 import Link from "next/link";
@@ -122,18 +129,24 @@ export function BrowseMovieCard({ movie, isWatched, isWatchlisted, isLoggedIn }:
             onClick={() =>
               run(
                 () =>
-                  isTV ? addTVToWatchlist(movie.id) : addToWatchlist(movie.id),
-                () => setWatchlisted(true),
-                "Added to watchlist.",
+                  watchlisted
+                    ? isTV
+                      ? removeTVFromWatchlist(movie.id)
+                      : removeFromWatchlist(movie.id)
+                    : isTV
+                      ? addTVToWatchlist(movie.id)
+                      : addToWatchlist(movie.id),
+                () => setWatchlisted((p) => !p),
+                watchlisted ? "Removed from watchlist." : "Added to watchlist.",
               )
             }
             className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition disabled:opacity-50 ${
               watchlisted
-                ? "border border-white/20 bg-white/10 text-white"
+                ? "border border-indigo-400/30 bg-indigo-400/10 text-indigo-200 hover:bg-indigo-400/20"
                 : "border border-white/[0.08] bg-white/[0.04] text-zinc-400 hover:bg-white/[0.08] hover:text-white"
             }`}
           >
-            {watchlisted ? "✓ Queued" : "Watchlist"}
+            {watchlisted ? "✓ Queued — Remove" : "Watchlist"}
           </button>
         </div>
       </div>

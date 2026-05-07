@@ -318,6 +318,30 @@ export async function addTVToWatchlist(tmdbId: number) {
   revalidatePath("/browse");
 }
 
+export async function removeTVFromWatchlist(tmdbId: number) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const storedId = toTVStoredId(tmdbId);
+  const { data: movie } = await supabase
+    .from("movies")
+    .select("id")
+    .eq("tmdb_id", storedId)
+    .maybeSingle();
+  if (!movie?.id) return;
+
+  await supabase
+    .from("watchlist")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("movie_id", movie.id);
+  revalidatePath("/watchlist");
+  revalidatePath("/browse");
+}
+
 // ---------------------------------------------------------------------------
 // Individual TV Season actions
 // ---------------------------------------------------------------------------

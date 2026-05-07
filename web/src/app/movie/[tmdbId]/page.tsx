@@ -30,6 +30,7 @@ export default async function MovieDetailPage({ params }: Props) {
 
   // Load existing diary entry + friends' ratings for this movie.
   let existing: { user_rating: number | null; notes: string | null } | null = null;
+  let inWatchlist = false;
   type FriendRating = { name: string; username: string | null; avatar_url: string | null; rating: number };
   let friendRatings: FriendRating[] = [];
 
@@ -41,10 +42,16 @@ export default async function MovieDetailPage({ params }: Props) {
       .maybeSingle();
 
     if (movieRow?.id) {
-      const [{ data: entry }, { data: friendRows }] = await Promise.all([
+      const [{ data: entry }, { data: watchlistRow }, { data: friendRows }] = await Promise.all([
         supabase
           .from("watched_movies")
           .select("user_rating, notes")
+          .eq("user_id", user.id)
+          .eq("movie_id", movieRow.id)
+          .maybeSingle(),
+        supabase
+          .from("watchlist")
+          .select("id")
           .eq("user_id", user.id)
           .eq("movie_id", movieRow.id)
           .maybeSingle(),
@@ -57,6 +64,8 @@ export default async function MovieDetailPage({ params }: Props) {
           .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`)
           .eq("status", "accepted"),
       ]);
+
+      inWatchlist = !!watchlistRow?.id;
 
       if (entry) {
         existing = {
@@ -200,6 +209,7 @@ export default async function MovieDetailPage({ params }: Props) {
           tmdbId={tmdbId}
           isLoggedIn={!!user}
           existing={existing}
+          inWatchlist={inWatchlist}
         />
 
         {!user ? (
