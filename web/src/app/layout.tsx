@@ -73,21 +73,21 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col antialiased`}
       >
         <SiteHeader />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 pb-20 md:pb-0">{children}</main>
         <Toaster
-          position="bottom-center"
+          position="top-right"
           theme="dark"
           toastOptions={{
             style: {
-              background: "rgba(24, 24, 32, 0.95)",
-              border: "1px solid rgba(255,255,255,0.08)",
+              background: "rgba(10, 14, 26, 0.88)",
+              border: "1px solid rgba(148,163,255,0.2)",
               color: "#f1f1f3",
-              backdropFilter: "blur(16px)",
-              borderRadius: "12px",
+              backdropFilter: "blur(20px)",
+              borderRadius: "14px",
               fontSize: "13px",
-              padding: "12px 16px",
+              padding: "12px 14px",
             },
-            className: "shadow-2xl shadow-black/50",
+            className: "shadow-2xl shadow-indigo-950/50",
           }}
         />
         <footer className="border-t border-white/[0.06] py-8 text-center text-xs text-zinc-600">

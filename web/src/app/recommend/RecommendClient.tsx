@@ -39,6 +39,8 @@ export function RecommendClient() {
   const [watchRegion, setWatchRegion] = useState("US");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [genrePanelOpen, setGenrePanelOpen] = useState(false);
+  const [genreSearch, setGenreSearch] = useState("");
 
   function toggleVibe(value: string) {
     setVibes((prev) => {
@@ -56,6 +58,10 @@ export function RecommendClient() {
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
   }
+
+  const filteredGenres = TMDB_GENRE_OPTIONS.filter((g) =>
+    g.name.toLowerCase().includes(genreSearch.trim().toLowerCase()),
+  );
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -164,23 +170,58 @@ export function RecommendClient() {
             </button>
           )}
         </div>
-        {/* Horizontal scrollable chip row on mobile, wraps on sm+ */}
-        <div className="flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible scrollbar-hide">
-          {TMDB_GENRE_OPTIONS.map((g) => (
-            <button
-              key={g.id}
-              type="button"
-              onClick={() => toggleGenre(g.id)}
-              className={`shrink-0 rounded-full border px-3 py-1.5 text-xs transition ${
-                genres.includes(g.id)
-                  ? "border-indigo-400/40 bg-indigo-400/12 text-indigo-100"
-                  : "border-white/[0.08] text-zinc-500 hover:border-white/20 hover:text-zinc-300"
-              }`}
-            >
-              {g.name}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setGenrePanelOpen((p) => !p)}
+            className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-zinc-300 transition hover:border-white/20"
+          >
+            {genrePanelOpen ? "Close genres" : "Browse genres"}
+          </button>
+          {genres.length > 0 ? (
+            <p className="text-xs text-indigo-200/80">{genres.length} selected</p>
+          ) : null}
         </div>
+        {genres.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            {TMDB_GENRE_OPTIONS.filter((g) => genres.includes(g.id)).map((g) => (
+              <button
+                key={g.id}
+                type="button"
+                onClick={() => toggleGenre(g.id)}
+                className="shrink-0 rounded-full border border-indigo-400/40 bg-indigo-400/12 px-3 py-1.5 text-xs text-indigo-100 transition"
+              >
+                {g.name} ×
+              </button>
+            ))}
+          </div>
+        )}
+        {genrePanelOpen ? (
+          <div className="space-y-3 rounded-2xl border border-white/10 bg-[#0a0f1b]/70 p-4 backdrop-blur-sm">
+            <input
+              value={genreSearch}
+              onChange={(e) => setGenreSearch(e.target.value)}
+              placeholder="Search genres..."
+              className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none placeholder:text-zinc-600 focus:ring-2 focus:ring-indigo-400/25"
+            />
+            <div className="grid max-h-56 grid-cols-2 gap-2 overflow-y-auto pr-1 sm:grid-cols-3">
+              {filteredGenres.map((g) => (
+                <button
+                  key={g.id}
+                  type="button"
+                  onClick={() => toggleGenre(g.id)}
+                  className={`rounded-xl border px-3 py-2 text-left text-xs transition ${
+                    genres.includes(g.id)
+                      ? "border-indigo-400/45 bg-indigo-400/15 text-indigo-100"
+                      : "border-white/[0.08] text-zinc-400 hover:border-white/20 hover:text-zinc-200"
+                  }`}
+                >
+                  {g.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <section

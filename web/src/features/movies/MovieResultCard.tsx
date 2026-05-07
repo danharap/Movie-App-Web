@@ -5,6 +5,7 @@ import {
   dismissMovie,
   markWatched,
 } from "@/app/actions/library";
+import { movieToast } from "@/components/ui/movieToast";
 import { posterUrl } from "@/lib/tmdb/constants";
 import type { RecommendedMovie } from "@/types/movie";
 import Image from "next/image";
@@ -21,7 +22,7 @@ export function MovieResultCard({ movie }: Props) {
     startTransition(async () => {
       try {
         await action();
-        toast.success(successMsg);
+        movieToast(successMsg, movie.title, movie.poster_path);
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Something went wrong.");
       }
@@ -31,7 +32,7 @@ export function MovieResultCard({ movie }: Props) {
   const poster = posterUrl(movie.poster_path, "w500");
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-zinc-900/60 shadow-xl shadow-black/40 transition-all duration-300 hover:border-indigo-400/25 hover:shadow-indigo-950/20 hover:-translate-y-0.5 md:flex-row">
+    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-zinc-900/60 shadow-xl shadow-black/40 transition-all duration-300 hover:-translate-y-1 hover:border-indigo-400/30 hover:shadow-indigo-900/30 md:flex-row">
       <Link
         href={`/movie/${movie.id}`}
         className="relative aspect-[2/3] w-full shrink-0 overflow-hidden bg-zinc-800 md:w-44 lg:w-52"
@@ -41,7 +42,7 @@ export function MovieResultCard({ movie }: Props) {
             src={poster}
             alt={movie.title}
             fill
-            className="object-cover transition duration-500 group-hover:scale-[1.04]"
+            className="object-cover transition duration-500 group-hover:scale-[1.06]"
             sizes="(max-width:768px) 100vw, 208px"
           />
         ) : (

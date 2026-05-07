@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --background: #070708;
+  --background: #060913;
   --foreground: #f1f1f3;
   --muted: #a1a1aa;
-  --card: rgba(20, 20, 28, 0.75);
-  --accent: #818cf8;
-  --accent-dim: rgba(129, 140, 248, 0.14);
-  --ring: rgba(129, 140, 248, 0.4);
+  --card: rgba(14, 18, 34, 0.76);
+  --accent: #7480ff;
+  --accent-dim: rgba(116, 128, 255, 0.16);
+  --ring: rgba(116, 128, 255, 0.44);
 }
 
 @theme inline {
@@ -37,8 +37,13 @@ html {
 body {
   background: radial-gradient(
       ellipse 120% 80% at 50% -20%,
-      rgba(99, 102, 241, 0.10),
+      rgba(86, 94, 255, 0.16),
       transparent 55%
+    ),
+    radial-gradient(
+      ellipse 100% 70% at 100% 10%,
+      rgba(24, 186, 255, 0.08),
+      transparent 60%
     ),
     var(--background);
   color: var(--foreground);
@@ -120,6 +125,14 @@ body {
   opacity: 0;
   transform: translateY(8px);
   animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.premium-card {
+  transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 320ms ease, border-color 320ms ease;
+}
+.premium-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 22px 40px rgba(10, 16, 40, 0.45);
 }
 
 @keyframes fadeUp {

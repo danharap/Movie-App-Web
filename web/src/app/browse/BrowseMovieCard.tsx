@@ -8,6 +8,7 @@ import {
   removeFromWatchlist,
   removeTVFromWatchlist,
 } from "@/app/actions/library";
+import { movieToast } from "@/components/ui/movieToast";
 import { posterUrl } from "@/lib/tmdb/constants";
 import Image from "next/image";
 import Link from "next/link";
@@ -52,7 +53,7 @@ export function BrowseMovieCard({ movie, isWatched, isWatchlisted, isLoggedIn }:
       try {
         await action();
         onSuccess();
-        toast.success(msg);
+        movieToast(msg, movie.title, movie.poster_path);
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Something went wrong.");
       }
@@ -60,7 +61,7 @@ export function BrowseMovieCard({ movie, isWatched, isWatchlisted, isLoggedIn }:
   }
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-2xl border border-white/[0.07] bg-zinc-900/60 shadow-lg shadow-black/30 transition-all duration-300 hover:border-indigo-400/20 hover:-translate-y-0.5 hover:shadow-indigo-950/20">
+    <article className="group flex flex-col overflow-hidden rounded-2xl border border-white/[0.07] bg-zinc-900/60 shadow-lg shadow-black/30 transition-all duration-300 hover:-translate-y-1 hover:border-indigo-300/40 hover:shadow-indigo-950/35">
       <Link
         href={href}
         className="relative aspect-[2/3] w-full overflow-hidden bg-zinc-800"
@@ -70,7 +71,7 @@ export function BrowseMovieCard({ movie, isWatched, isWatchlisted, isLoggedIn }:
             src={poster}
             alt={movie.title}
             fill
-            className="object-cover transition duration-500 group-hover:scale-[1.04]"
+            className="object-cover transition duration-500 group-hover:scale-[1.06]"
             sizes="(max-width:640px) 50vw, (max-width:1024px) 33vw, 20vw"
           />
         ) : (
@@ -92,7 +93,7 @@ export function BrowseMovieCard({ movie, isWatched, isWatchlisted, isLoggedIn }:
         )}
       </Link>
 
-      <div className="flex flex-1 flex-col gap-2 p-3">
+        <div className="flex flex-1 flex-col gap-2.5 p-3">
         <div>
           <Link
             href={href}
